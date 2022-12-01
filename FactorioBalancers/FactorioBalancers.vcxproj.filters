@@ -18,48 +18,72 @@
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Direction.cpp">
+    <ClCompile Include="src\grid\Grid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\GridItem.cpp">
+    <ClCompile Include="src\grid\gridItems\GridItem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\AsciiCanvas.cpp">
+    <ClCompile Include="src\grid\gridItems\items\ItemSink.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Belt.cpp">
+    <ClCompile Include="src\grid\gridItems\items\ItemSource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Grid.cpp">
+    <ClCompile Include="src\grid\gridItems\Belt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\AsciiImage.cpp">
+    <ClCompile Include="src\grid\gridItems\Splitter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Splitter.cpp">
+    <ClCompile Include="src\grid\gridItems\Underground.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\asciiDrawing\AsciiCanvas.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\asciiDrawing\AsciiImage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\util\Direction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\util\Fraction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Grid.h">
+    <ClInclude Include="src\grid\Grid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\GridItem.h">
+    <ClInclude Include="src\grid\gridItems\GridItem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Direction.h">
+    <ClInclude Include="src\grid\gridItems\items\ItemSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Belt.h">
+    <ClInclude Include="src\grid\gridItems\items\ItemSink.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\AsciiCanvas.h">
+    <ClInclude Include="src\grid\gridItems\Belt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\AsciiImage.h">
+    <ClInclude Include="src\grid\gridItems\Underground.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Splitter.h">
+    <ClInclude Include="src\grid\gridItems\Splitter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\asciiDrawing\AsciiCanvas.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\asciiDrawing\AsciiImage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\util\Fraction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\util\Direction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

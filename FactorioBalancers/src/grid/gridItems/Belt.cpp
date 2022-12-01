@@ -10,7 +10,7 @@ AsciiImage Belt::getImage() const {
     
     if(inputDirection == Direction::SOUTH) {
         switch(getDirection()) {
-        case Direction::EAST:
+        case Direction::WEST:
             return {
                 "2 V  V |",
                 "<      |",
@@ -24,7 +24,7 @@ AsciiImage Belt::getImage() const {
                 "|      |",
                 "| V  V |"
             };
-        case Direction::WEST:
+        case Direction::EAST:
             return {
                 "| V  V 1",
                 "|      >",

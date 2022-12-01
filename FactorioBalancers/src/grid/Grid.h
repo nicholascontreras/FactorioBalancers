@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 
-#include "AsciiCanvas.h"
+#include "../asciiDrawing/AsciiCanvas.h"
 
 // Forward declare GridItem
 class GridItem;

@@ -141,23 +141,31 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\AsciiCanvas.cpp" />
-    <ClCompile Include="src\AsciiImage.cpp" />
-    <ClCompile Include="src\Belt.cpp" />
-    <ClCompile Include="src\Direction.cpp" />
-    <ClCompile Include="src\Grid.cpp" />
-    <ClCompile Include="src\GridItem.cpp" />
+    <ClCompile Include="src\asciiDrawing\AsciiCanvas.cpp" />
+    <ClCompile Include="src\asciiDrawing\AsciiImage.cpp" />
+    <ClCompile Include="src\grid\gridItems\Belt.cpp" />
+    <ClCompile Include="src\util\Direction.cpp" />
+    <ClCompile Include="src\util\Fraction.cpp" />
+    <ClCompile Include="src\grid\Grid.cpp" />
+    <ClCompile Include="src\grid\gridItems\GridItem.cpp" />
+    <ClCompile Include="src\grid\gridItems\items\ItemSink.cpp" />
+    <ClCompile Include="src\grid\gridItems\items\ItemSource.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\Splitter.cpp" />
+    <ClCompile Include="src\grid\gridItems\Splitter.cpp" />
+    <ClCompile Include="src\grid\gridItems\Underground.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\AsciiCanvas.h" />
-    <ClInclude Include="src\AsciiImage.h" />
-    <ClInclude Include="src\Belt.h" />
-    <ClInclude Include="src\Direction.h" />
-    <ClInclude Include="src\Grid.h" />
-    <ClInclude Include="src\GridItem.h" />
-    <ClInclude Include="src\Splitter.h" />
+    <ClInclude Include="src\asciiDrawing\AsciiCanvas.h" />
+    <ClInclude Include="src\asciiDrawing\AsciiImage.h" />
+    <ClInclude Include="src\grid\gridItems\Belt.h" />
+    <ClInclude Include="src\util\Direction.h" />
+    <ClInclude Include="src\util\Fraction.h" />
+    <ClInclude Include="src\grid\Grid.h" />
+    <ClInclude Include="src\grid\gridItems\GridItem.h" />
+    <ClInclude Include="src\grid\gridItems\items\ItemSink.h" />
+    <ClInclude Include="src\grid\gridItems\items\ItemSource.h" />
+    <ClInclude Include="src\grid\gridItems\Splitter.h" />
+    <ClInclude Include="src\grid\gridItems\Underground.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

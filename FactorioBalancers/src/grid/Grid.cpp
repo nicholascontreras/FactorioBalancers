@@ -1,7 +1,7 @@
 #include "Grid.h"
 
 // GridItem forward declared in header
-#include "GridItem.h"
+#include "gridItems/GridItem.h"
 
 #include <algorithm>
 #include <stdexcept>

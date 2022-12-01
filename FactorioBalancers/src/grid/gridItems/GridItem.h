@@ -2,10 +2,10 @@
 
 #include <string>
 
-#include "Grid.h"
-#include "Direction.h"
-#include "AsciiImage.h"
-#include "AsciiCanvas.h"
+#include "../Grid.h"
+#include "../../util/Direction.h"
+#include "../../asciiDrawing/AsciiImage.h"
+#include "../../asciiDrawing/AsciiCanvas.h"
 
 class GridItem {
 public:

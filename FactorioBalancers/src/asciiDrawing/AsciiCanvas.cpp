@@ -12,7 +12,7 @@ void AsciiCanvas::draw(int x, int y, AsciiImage image) {
     if(x < 0 || y < 0) {
         throw std::invalid_argument("Position out of bounds!");
     }
-    if(x + image.getWidth() >= width || y + image.getHeight() >= height) {
+    if(x + image.getWidth() > width || y + image.getHeight() > height) {
         throw std::invalid_argument("Position out of bounds!");
     }
 

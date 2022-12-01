@@ -34,7 +34,9 @@ char AsciiImage::at(int x, int y) const {
 }
 
 void AsciiImage::insert437() {
-    for(std::string& curLine : image) {
+    for(std::string& curLine : image) {  
+        std::replace(curLine.begin(), curLine.end(), '|', '\xB3'); // │
+        std::replace(curLine.begin(), curLine.end(), '-', '\xC4'); // ─
         std::replace(curLine.begin(), curLine.end(), '0', '\xBF'); // ┐
         std::replace(curLine.begin(), curLine.end(), '1', '\xC0'); // └
         std::replace(curLine.begin(), curLine.end(), '2', '\xD9'); // ┘
