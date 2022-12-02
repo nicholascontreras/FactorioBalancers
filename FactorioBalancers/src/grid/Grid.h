@@ -3,8 +3,8 @@
 
 #include "../asciiDrawing/AsciiCanvas.h"
 
-// Forward declare GridItem
-class GridItem;
+// Forward declare GridObject
+class GridObject;
 
 class Grid {
 public:
@@ -14,12 +14,14 @@ public:
     Grid(const Grid& other) = delete;
     Grid& operator=(const Grid& other) = delete;
 
-    bool isGridItemAt(int row, int col) const;
-    const GridItem* gridItemAt(int row, int col) const;
+    bool isGridObjectAt(int row, int col) const;
+    const GridObject* gridObjectAt(int row, int col) const;
 
-    void addGridItem(GridItem* gridItem);
+    void addGridItem(GridObject* gridItem);
+
+    const std::vector<GridObject*> allGridObjects() const;
 
     AsciiCanvas draw() const;
 private:
-    std::vector<GridItem*> gridItems;
+    std::vector<GridObject*> gridItems;
 };

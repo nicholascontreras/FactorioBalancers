@@ -14,10 +14,8 @@ public:
 
     std::string toString() const;
 private:
-    const int numerator, denominator;
+    int numerator, denominator;
 
-    Fraction(int simplifiedNumerator, int simplifiedDenominator, void*);
-
-    static Fraction simplify(int numerator, int denominator);
+    void simplify();
     static bool isMultiple(int a, int b);
 };

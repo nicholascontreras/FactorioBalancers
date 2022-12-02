@@ -2,8 +2,8 @@
 
 #include <stdexcept>
 
-Fraction::Fraction(int numerator, int denominator) : 
-    Fraction(simplify(numerator, denominator)) {
+Fraction::Fraction(int numerator, int denominator) : numerator(numerator), denominator(denominator) {
+    simplify();
 }
 
 Fraction::Fraction(int integer) : Fraction(integer, 1) {
@@ -37,14 +37,7 @@ std::string Fraction::toString() const {
     }
 }
 
-Fraction::Fraction(int simplifiedNumerator, int simplifiedDenominator, void*) :
-    numerator(simplifiedNumerator), denominator(simplifiedDenominator) {
-    if(denominator <= 0) {
-        throw std::invalid_argument("Denominator must be strictly positive!");
-    }
-}
-
-Fraction Fraction::simplify(int numerator, int denominator) {
+void Fraction::simplify() {
     if(denominator < 0) {
         numerator = -numerator;
         denominator = -denominator;
@@ -56,7 +49,6 @@ Fraction Fraction::simplify(int numerator, int denominator) {
             denominator /= i;
         }
     }
-    return Fraction(numerator, denominator, nullptr);
 }
 
 bool Fraction::isMultiple(int a, int b) {

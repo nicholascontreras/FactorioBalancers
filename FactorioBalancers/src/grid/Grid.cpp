@@ -1,7 +1,7 @@
 #include "Grid.h"
 
-// GridItem forward declared in header
-#include "gridItems/GridItem.h"
+// GridObject forward declared in header
+#include "gridObjects/GridObject.h"
 
 #include <algorithm>
 #include <stdexcept>
@@ -10,33 +10,37 @@ Grid::Grid() {
 }
 
 Grid::~Grid() {
-    std::for_each(gridItems.begin(), gridItems.end(), [](GridItem* cur) { delete cur; });
+    std::for_each(gridItems.begin(), gridItems.end(), [](GridObject* cur) { delete cur; });
 }
 
-bool Grid::isGridItemAt(int row, int col) const {
-    return std::any_of(gridItems.begin(), gridItems.end(), [row, col](GridItem* cur) {
+bool Grid::isGridObjectAt(int row, int col) const {
+    return std::any_of(gridItems.begin(), gridItems.end(), [row, col](GridObject* cur) {
         return cur->getRow() == row && cur->getCol() == col;
     });
 }
 
-const GridItem* Grid::gridItemAt(int row, int col) const {
-    if(!isGridItemAt(row, col)) {
-        throw std::invalid_argument("No GridItem at given position!");
+const GridObject* Grid::gridObjectAt(int row, int col) const {
+    if(!isGridObjectAt(row, col)) {
+        throw std::invalid_argument("No GridObject at given position!");
     }
 
-    return *std::find_if(gridItems.begin(), gridItems.end(), [row, col](GridItem* cur) {
+    return *std::find_if(gridItems.begin(), gridItems.end(), [row, col](GridObject* cur) {
         return cur->getRow() == row && cur->getCol() == col;
     });
 }
 
-void Grid::addGridItem(GridItem* gridItem) {
+void Grid::addGridItem(GridObject* gridItem) {
     gridItems.push_back(gridItem);
+}
+
+const std::vector<GridObject*> Grid::allGridObjects() const {
+    return gridItems;
 }
 
 AsciiCanvas Grid::draw() const {
     AsciiCanvas canvas(80, 20);
 
-    std::for_each(gridItems.begin(), gridItems.end(), [&canvas](GridItem* cur) {
+    std::for_each(gridItems.begin(), gridItems.end(), [&canvas](GridObject* cur) {
         cur->draw(canvas);
     });
 

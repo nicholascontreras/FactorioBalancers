@@ -54,3 +54,18 @@ void Direction::translate(int& row, int& col) {
         throw std::invalid_argument("Invalid Direction!");
     }
 }
+
+std::string Direction::toString() const {
+    switch(*this) {
+    case NORTH:
+        return "NORTH";
+    case EAST:
+        return "EAST";
+    case SOUTH:
+        return "SOUTH";
+    case WEST:
+        return "WEST";
+    default:
+        throw std::invalid_argument("Invalid Direction!");
+    }
+}

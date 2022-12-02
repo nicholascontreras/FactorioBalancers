@@ -1,8 +1,69 @@
 ﻿#include "Belt.h"
 
+#include <Windows.h>
 #include <stdexcept>
 
-Belt::Belt(const Grid& grid, int row, int col, Direction direction) : GridItem(grid, row, col, direction) {
+Belt::Belt(const Grid& grid, int row, int col, Direction direction) : GridObject(grid, row, col, direction) {
+}
+
+bool Belt::flowCanEnter(Direction incomingFlowDirection, bool leftLane) const {
+    UNREFERENCED_PARAMETER(leftLane);
+    return incomingFlowDirection != getDirection().reverse();
+}
+
+bool Belt::flowEntersLeftLane(Direction incomingFlowDirection, bool leftLane) const {
+    Direction beltInputDirection = determineInputDirection();
+    
+    if(incomingFlowDirection == beltInputDirection) {
+        return leftLane;
+    } else if(incomingFlowDirection == beltInputDirection.clockwise()) {
+        return true;
+    } else if(incomingFlowDirection == beltInputDirection.counterClockwise()) {
+        return false;
+    } else {
+        throw std::invalid_argument("Input is not arriving from valid Direction!");
+    }
+}
+
+bool Belt::flowHasPathToSink(bool leftLane, std::vector<const GridObject*> visited) const {
+    visited.push_back(this);
+
+    int outputRow = getRow();
+    int outputCol = getCol();
+    getDirection().translate(outputRow, outputCol);
+
+    if(!grid.isGridObjectAt(outputRow, outputCol)) {
+        return false;
+    }
+
+    const GridObject* outputObject = grid.gridObjectAt(outputRow, outputCol);
+    if(!outputObject->flowCanEnter(getDirection(), leftLane)) {
+        return false;
+    }
+
+    bool flowEntersLeftLane = outputObject->flowEntersLeftLane(getDirection(), leftLane);
+    bool flowHasPathToSink = outputObject->flowHasPathToSink(flowEntersLeftLane, visited);
+    return flowHasPathToSink;
+}
+
+std::string Belt::selectedString() const {
+    return "Belt - Output: " + getDirection().toString() + "\r\n" +
+        "Path (L): " + (flowHasPathToSink(true, std::vector<const GridObject*>()) ? "T" : "F") +
+        " (R): " + (flowHasPathToSink(false, std::vector<const GridObject*>()) ? "T" : "F");
+}
+
+void Belt::propagateFlow(FlowRecord* flowRecord, bool leftLane) const {
+    if(!flowHasPathToSink(leftLane, std::vector<const GridObject*>())) {
+        throw std::logic_error("Cannot propagate flow, no path to Sink!");
+    }
+
+    int nextRow = getRow();
+    int nextCol = getCol();
+    getDirection().translate(nextRow, nextCol);
+    const GridObject* nextObject = grid.gridObjectAt(nextRow, nextCol);
+    bool leftLaneNext = nextObject->flowEntersLeftLane(getDirection(), leftLane);
+
+    nextObject->propagateFlow(new FlowRecord(flowRecord, flowRecord->amount, this, leftLane), leftLaneNext);
 }
 
 AsciiImage Belt::getImage() const {
@@ -115,8 +176,8 @@ Direction Belt::determineInputDirection() const {
     int behindCol = getCol();
     getDirection().reverse().translate(behindRow, behindCol);
 
-    if(grid.isGridItemAt(behindRow, behindCol)) {
-        if(grid.gridItemAt(behindRow, behindCol)->getDirection() == getDirection()) {
+    if(grid.isGridObjectAt(behindRow, behindCol)) {
+        if(grid.gridObjectAt(behindRow, behindCol)->getDirection() == getDirection()) {
             return getDirection();
         }
     }
@@ -126,8 +187,8 @@ Direction Belt::determineInputDirection() const {
     getDirection().clockwise().translate(cwRow, cwCol);
     bool cwIn = false;
 
-    if(grid.isGridItemAt(cwRow, cwCol)) {
-        if(grid.gridItemAt(cwRow, cwCol)->getDirection() == getDirection().counterClockwise()) {
+    if(grid.isGridObjectAt(cwRow, cwCol)) {
+        if(grid.gridObjectAt(cwRow, cwCol)->getDirection() == getDirection().counterClockwise()) {
             cwIn = true;
         }
     }
@@ -137,8 +198,8 @@ Direction Belt::determineInputDirection() const {
     getDirection().counterClockwise().translate(ccwRow, ccwCol);
     bool ccwIn = false;
 
-    if(grid.isGridItemAt(ccwRow, ccwCol)) {
-        if(grid.gridItemAt(ccwRow, ccwCol)->getDirection() == getDirection().clockwise()) {
+    if(grid.isGridObjectAt(ccwRow, ccwCol)) {
+        if(grid.gridObjectAt(ccwRow, ccwCol)->getDirection() == getDirection().clockwise()) {
             ccwIn = true;
         }
     }
