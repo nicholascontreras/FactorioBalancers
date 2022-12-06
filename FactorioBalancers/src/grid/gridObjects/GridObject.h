@@ -8,6 +8,7 @@
 #include "../../asciiDrawing/AsciiCanvas.h"
 
 #include "../../util/Fraction.h"
+#include "../../util/util.h"
 
 class GridObject {
 public:
@@ -34,7 +35,7 @@ public:
         FlowRecord(FlowRecord* prev, Fraction amount, const GridObject* gridObject, bool leftLane);
 
         FlowRecord* recordContains(GridObject* go, bool leftLane);
-        void deleteRecords(FlowRecord* deleteTo);
+        void deleteRecords();
     };
 
     virtual void propagateFlow(FlowRecord* flowRecord, bool leftLane) const = 0;

@@ -1,6 +1,5 @@
 #include "ItemSource.h"
 
-#include <Windows.h>
 #include <stdexcept>
 
 ItemSource::ItemSource(const Grid& grid, int row, int col) :
@@ -8,14 +7,14 @@ ItemSource::ItemSource(const Grid& grid, int row, int col) :
 }
 
 bool ItemSource::flowCanEnter(Direction incomingFlowDirection, bool leftLane) const {
-    UNREFERENCED_PARAMETER(incomingFlowDirection);
-    UNREFERENCED_PARAMETER(leftLane);
+    UNUSED(incomingFlowDirection);
+    UNUSED(leftLane);
     return false;
 }
 
 bool ItemSource::flowEntersLeftLane(Direction incomingFlowDirection, bool leftLane) const {
-    UNREFERENCED_PARAMETER(incomingFlowDirection);
-    UNREFERENCED_PARAMETER(leftLane);
+    UNUSED(incomingFlowDirection);
+    UNUSED(leftLane);
     throw std::logic_error("Flow cannot enter ItemSource!");
 }
 
@@ -41,11 +40,13 @@ bool ItemSource::flowHasPathToSink(bool leftLane, std::vector<const GridObject*>
 }
 
 std::string ItemSource::selectedString() const {
-    return std::string("Item Source");
+    return std::string("Item Source\r\n") +
+    "Path (L): " + (flowHasPathToSink(true, std::vector<const GridObject*>()) ? "T" : "F") +
+        " (R): " + (flowHasPathToSink(false, std::vector<const GridObject*>()) ? "T" : "F");
 }
 
 void ItemSource::propagateFlow(FlowRecord* flowRecord, bool leftLane) const {
-    UNREFERENCED_PARAMETER(flowRecord);
+    UNUSED(flowRecord);
 
     if(!flowHasPathToSink(leftLane, std::vector<const GridObject*>())) {
         throw std::logic_error("Cannot propagate flow, no path to Sink!");

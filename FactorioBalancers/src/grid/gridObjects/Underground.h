@@ -14,4 +14,6 @@ protected:
     virtual AsciiImage getImage() const;
 private:
     const bool down;
+
+    const Underground* getOtherHalf() const;
 };

@@ -118,6 +118,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -146,6 +147,7 @@
     <ClCompile Include="src\sim\FlowSimulator.cpp" />
     <ClCompile Include="src\grid\gridObjects\Belt.cpp" />
     <ClCompile Include="src\LayoutBrowser.cpp" />
+    <ClCompile Include="src\sim\LayoutSolver.cpp" />
     <ClCompile Include="src\util\Direction.cpp" />
     <ClCompile Include="src\util\Fraction.cpp" />
     <ClCompile Include="src\grid\Grid.cpp" />
@@ -162,6 +164,7 @@
     <ClInclude Include="src\sim\FlowSimulator.h" />
     <ClInclude Include="src\grid\gridObjects\Belt.h" />
     <ClInclude Include="src\LayoutBrowser.h" />
+    <ClInclude Include="src\sim\LayoutSolver.h" />
     <ClInclude Include="src\util\Direction.h" />
     <ClInclude Include="src\util\Fraction.h" />
     <ClInclude Include="src\grid\Grid.h" />
@@ -170,6 +173,7 @@
     <ClInclude Include="src\grid\gridObjects\items\ItemSource.h" />
     <ClInclude Include="src\grid\gridObjects\Splitter.h" />
     <ClInclude Include="src\grid\gridObjects\Underground.h" />
+    <ClInclude Include="src\util\util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

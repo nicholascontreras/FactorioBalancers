@@ -1,12 +1,32 @@
 #include "Fraction.h"
 
 #include <stdexcept>
+#include <cmath>
+#include <numeric>
+
+const double Fraction::ROUND_AT = 1.0 / 65535;
 
 Fraction::Fraction(int numerator, int denominator) : numerator(numerator), denominator(denominator) {
     simplify();
 }
 
-Fraction::Fraction(int integer) : Fraction(integer, 1) {
+Fraction::Fraction(int integer) : numerator(integer), denominator(1) {
+}
+
+bool Fraction::operator==(Fraction other) const {
+    return numerator == other.numerator && denominator == other.denominator;
+}
+
+bool Fraction::operator<(Fraction other) const {
+    return numerator * other.denominator < other.numerator* denominator;
+}
+
+bool Fraction::operator>(Fraction other) const {
+    return numerator * other.denominator > other.numerator* denominator;
+}
+
+bool Fraction::operator<=(Fraction other) const {
+    return operator<(other) || operator==(other);
 }
 
 Fraction Fraction::operator+(Fraction other) const {
@@ -29,6 +49,10 @@ Fraction Fraction::operator/(Fraction other) const {
     return Fraction(numerator * other.denominator, denominator * other.numerator);
 }
 
+Fraction Fraction::abs() const {
+    return Fraction(numerator < 0 ? -numerator : numerator, denominator);
+}
+
 std::string Fraction::toString() const {
     if(denominator == 1) {
         return std::to_string(numerator);
@@ -43,21 +67,13 @@ void Fraction::simplify() {
         denominator = -denominator;
     }
 
-    for(int i = 2; i <= denominator; i++) {
-        if(isMultiple(i, numerator) && isMultiple(i, denominator)) {
-            numerator /= i;
-            denominator /= i;
-        }
-    }
-}
+    int gcd = std::gcd(numerator, denominator);
+    numerator /= gcd;
+    denominator /= gcd;
 
-bool Fraction::isMultiple(int a, int b) {
-    a = abs(a);
-    b = abs(b);
-
-    int x = a;
-    while(x < b) {
-        x += a;
+    int nearestInteger = (int)std::round((double)numerator / denominator);
+    if(std::abs(((double)numerator / denominator) - nearestInteger) <= ROUND_AT) {
+        numerator = nearestInteger;
+        denominator = 1;
     }
-    return x == b;
 }

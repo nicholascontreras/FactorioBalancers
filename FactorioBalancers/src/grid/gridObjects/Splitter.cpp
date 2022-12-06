@@ -1,7 +1,8 @@
 #include "Splitter.h"
 
-#include <Windows.h>
 #include <stdexcept>
+
+#include <random>
 
 Splitter::Splitter(const Grid& grid, int row, int col, Direction direction, bool leftHalf) : 
     GridObject(grid, row, col, direction),
@@ -9,7 +10,7 @@ Splitter::Splitter(const Grid& grid, int row, int col, Direction direction, bool
 }
 
 bool Splitter::flowCanEnter(Direction incomingFlowDirection, bool leftLane) const {
-    UNREFERENCED_PARAMETER(leftLane);
+    UNUSED(leftLane);
     return incomingFlowDirection == getDirection();
 }
 
@@ -44,6 +45,10 @@ bool Splitter::flowHasPathToSink(bool leftLane, std::vector<const GridObject*> v
         return false;
     }
 
+    if(std::find(visited.begin(), visited.end(), outputObject) != visited.end()) {
+        return false;
+    }
+
     bool flowEntersLeftLane = outputObject->flowEntersLeftLane(getDirection(), leftLane);
     bool flowHasPathToSink = outputObject->flowHasPathToSink(flowEntersLeftLane, visited);
     return flowHasPathToSink;
@@ -75,8 +80,18 @@ void Splitter::propagateFlow(FlowRecord* flowRecord, bool leftLane) const {
 
     if(flowPastMe && flowPastOther) {
         Fraction amountEachSide = flowRecord->amount / 2;
-        nextObject->propagateFlow(new FlowRecord(new FlowRecord(flowRecord), amountEachSide, this, leftLane), leftLaneNext);
-        nextObjectOther->propagateFlow(new FlowRecord(flowRecord, amountEachSide, this, leftLane), leftLaneNextOther);
+        if(amountEachSide == 0) {
+            std::random_device rd = std::random_device();
+            std::random_device::result_type rand = rd();
+            if(rand < (rd.min() + rd.max()) / 2) {
+                nextObject->propagateFlow(new FlowRecord(flowRecord, flowRecord->amount, this, leftLane), leftLaneNext);
+            } else {
+                nextObjectOther->propagateFlow(new FlowRecord(flowRecord, flowRecord->amount, this, leftLane), leftLaneNextOther);
+            }
+        } else {
+            nextObject->propagateFlow(new FlowRecord(new FlowRecord(flowRecord), amountEachSide, this, leftLane), leftLaneNext);
+            nextObjectOther->propagateFlow(new FlowRecord(flowRecord, amountEachSide, this, leftLane), leftLaneNextOther);
+        }
     } else if(flowPastMe) {
         nextObject->propagateFlow(new FlowRecord(flowRecord, flowRecord->amount, this, leftLane), leftLaneNext);
     } else if(flowPastOther) {

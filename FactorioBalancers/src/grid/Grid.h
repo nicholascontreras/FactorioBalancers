@@ -8,7 +8,9 @@ class GridObject;
 
 class Grid {
 public:
-    Grid();
+    const int numRows, numCols;
+
+    Grid(int numRows, int numCols);
     ~Grid();
 
     Grid(const Grid& other) = delete;
@@ -17,11 +19,13 @@ public:
     bool isGridObjectAt(int row, int col) const;
     const GridObject* gridObjectAt(int row, int col) const;
 
-    void addGridItem(GridObject* gridItem);
+    void addGridObject(GridObject* gridItem);
+
+    void removeGridObject(int row, int col);
 
     const std::vector<GridObject*> allGridObjects() const;
 
     AsciiCanvas draw() const;
 private:
-    std::vector<GridObject*> gridItems;
+    std::vector<GridObject*> gridObjects;
 };

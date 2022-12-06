@@ -41,7 +41,7 @@ void ItemSink::propagateFlow(FlowRecord* flowRecord, bool leftLane) const {
         flowRightLane = flowRightLane + flowRecord->amount;
     }
 
-    flowRecord->deleteRecords(nullptr);
+    flowRecord->deleteRecords();
 }
 
 void ItemSink::resetFlowAmounts() {

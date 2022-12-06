@@ -55,24 +55,12 @@ bool Underground::flowHasPathToSink(bool leftLane, std::vector<const GridObject*
     visited.push_back(this);
     
     if(down) {
-        int upRow = getRow();
-        int upCol = getCol();
-        for(int i = 0; i < 9; i++) {
-            getDirection().translate(upRow, upCol);
-
-            if(grid.isGridObjectAt(upRow, upCol)) {
-                const GridObject* go = grid.gridObjectAt(upRow, upCol);
-                const Underground* casted = dynamic_cast<const Underground*>(go);
-                if(casted != nullptr) {
-                    if(casted->down) {
-                        return false;
-                    } else {
-                        return casted->flowHasPathToSink(leftLane, visited);
-                    }
-                }
-            }
+        const Underground* myUp = getOtherHalf();
+        if(myUp != nullptr) {
+            return myUp->flowHasPathToSink(leftLane, visited);
+        } else {
+            return false;
         }
-        return false;
     } else {
         int outputRow = getRow();
         int outputCol = getCol();
@@ -98,6 +86,21 @@ std::string Underground::selectedString() const {
 }
 
 void Underground::propagateFlow(FlowRecord* flowRecord, bool leftLane) const {
+    if(!flowHasPathToSink(leftLane, std::vector<const GridObject*>())) {
+        throw std::logic_error("Cannot propagate flow, no path to Sink!");
+    }
+    
+    if(down) {
+        getOtherHalf()->propagateFlow(new FlowRecord(flowRecord, flowRecord->amount, this, leftLane), leftLane);
+    } else {
+        int nextRow = getRow();
+        int nextCol = getCol();
+        getDirection().translate(nextRow, nextCol);
+        const GridObject* nextObject = grid.gridObjectAt(nextRow, nextCol);
+        bool leftLaneNext = nextObject->flowEntersLeftLane(getDirection(), leftLane);
+
+        nextObject->propagateFlow(new FlowRecord(flowRecord, flowRecord->amount, this, leftLane), leftLaneNext);
+    }
 }
 
 AsciiImage Underground::getImage() const {
@@ -167,4 +170,29 @@ AsciiImage Underground::getImage() const {
     }
 
     throw std::invalid_argument("Invalid direction!");
+}
+
+const Underground* Underground::getOtherHalf() const {
+    int otherHalfRow = getRow();
+    int otherHalfCol = getCol();
+
+    Direction otherHalfDir = down ? getDirection() : getDirection().reverse();
+    for(int i = 0; i < 9; i++) {
+        otherHalfDir.translate(otherHalfRow, otherHalfCol);
+
+        if(grid.isGridObjectAt(otherHalfRow, otherHalfCol)) {
+            const GridObject* go = grid.gridObjectAt(otherHalfRow, otherHalfCol);
+            const Underground* casted = dynamic_cast<const Underground*>(go);
+            if(casted != nullptr) {
+                if(casted->getDirection() == getDirection()) {
+                    if(casted->down == down) {
+                        return nullptr;
+                    } else {
+                        return casted;
+                    }
+                }
+            }
+        }
+    }
+    return nullptr;
 }

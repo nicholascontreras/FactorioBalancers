@@ -1,6 +1,11 @@
 #include "GridObject.h"
 
+#include <stdexcept>
+
 GridObject::GridObject(const Grid& grid, int row, int col, Direction direction) : grid(grid), row(row), col(col), direction(direction) {
+    if(row < 0 || row >= grid.numRows || col < 0 || col >= grid.numCols) {
+        throw std::invalid_argument("Position given is not on the Grid!");
+    }
 }
 
 GridObject::~GridObject() {
@@ -37,9 +42,9 @@ GridObject::FlowRecord* GridObject::FlowRecord::recordContains(GridObject* gridO
     }
 }
 
-void GridObject::FlowRecord::deleteRecords(FlowRecord* deleteTo) {
-    if(prev != deleteTo) {
-        prev->deleteRecords(deleteTo);
+void GridObject::FlowRecord::deleteRecords() {
+    if(prev != nullptr) {
+        prev->deleteRecords();
     }
     delete this;
 }

@@ -26,7 +26,11 @@ void FlowSimulator::runSimulation(const Grid& grid) {
     }
 
     for(ItemSource* curSource : itemSources) {
-        curSource->propagateFlow(nullptr, true);
-        curSource->propagateFlow(nullptr, false);
+        if(curSource->flowHasPathToSink(true, std::vector<const GridObject*>())) {
+            curSource->propagateFlow(nullptr, true);
+        }
+        if(curSource->flowHasPathToSink(false, std::vector<const GridObject*>())) {
+            curSource->propagateFlow(nullptr, false);
+        }
     }
 }
