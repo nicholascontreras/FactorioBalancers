@@ -17,10 +17,9 @@ public:
     Grid& operator=(const Grid& other) = delete;
 
     bool isGridObjectAt(int row, int col) const;
-    const GridObject* gridObjectAt(int row, int col) const;
+    GridObject* gridObjectAt(int row, int col) const;
 
     void addGridObject(GridObject* gridItem);
-
     void removeGridObject(int row, int col);
 
     const std::vector<GridObject*> allGridObjects() const;

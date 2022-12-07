@@ -3,18 +3,18 @@
 #include <stdexcept>
 
 Underground::Underground(const Grid& grid, int row, int col, Direction direction, bool down) :
-    GridObject(grid, row, col, direction),
+    GridObject(grid, row, col, direction, new SimulationRecord()),
     down(down) {
 }
 
-bool Underground::flowCanEnter(Direction incomingFlowDirection, bool leftLane) const {
+bool Underground::flowCanEnter(Direction incomingFlowDirection, Lane lane) const {
     if(down) {
         if(incomingFlowDirection == getDirection()) {
             return true;
         } else if(incomingFlowDirection == getDirection().clockwise()) {
-            return !leftLane;
+            return lane == Lane::RIGHT;
         } else if(incomingFlowDirection == getDirection().counterClockwise()) {
-            return leftLane;
+            return lane == Lane::LEFT;
         } else if(incomingFlowDirection == getDirection().reverse()) {
             return false;
         }
@@ -22,9 +22,9 @@ bool Underground::flowCanEnter(Direction incomingFlowDirection, bool leftLane) c
         if(incomingFlowDirection == getDirection()) {
             return false;
         } else if(incomingFlowDirection == getDirection().clockwise()) {
-            return leftLane;
+            return lane == Lane::LEFT;
         } else if(incomingFlowDirection == getDirection().counterClockwise()) {
-            return !leftLane;
+            return lane == Lane::RIGHT;
         } else if(incomingFlowDirection == getDirection().reverse()) {
             return false;
         }
@@ -32,32 +32,32 @@ bool Underground::flowCanEnter(Direction incomingFlowDirection, bool leftLane) c
     throw std::invalid_argument("Invalid flow Direction!");
 }
 
-bool Underground::flowEntersLeftLane(Direction incomingFlowDirection, bool leftLane) const {
+GridObject::Lane Underground::flowEntersLane(Direction incomingFlowDirection, Lane lane) const {
     if(down) {
         if(incomingFlowDirection == getDirection()) {
-            return leftLane;
+            return lane;
         } else if(incomingFlowDirection == getDirection().clockwise()) {
-            return true;
+            return Lane::LEFT;
         } else if(incomingFlowDirection == getDirection().counterClockwise()) {
-            return false;
+            return Lane::RIGHT;
         }
     } else {
         if(incomingFlowDirection == getDirection().clockwise()) {
-            return true;
+            return Lane::LEFT;
         } else if(incomingFlowDirection == getDirection().counterClockwise()) {
-            return false;
+            return Lane::RIGHT;
         }
     }
     throw std::invalid_argument("Input is not arriving from valid Direction!");
 }
 
-bool Underground::flowHasPathToSink(bool leftLane, std::vector<const GridObject*> visited) const {
+bool Underground::flowHasPathToSink(Lane lane, std::vector<const GridObject*> visited) const {
     visited.push_back(this);
     
     if(down) {
-        const Underground* myUp = getOtherHalf();
+        Underground* myUp = getOtherHalf();
         if(myUp != nullptr) {
-            return myUp->flowHasPathToSink(leftLane, visited);
+            return myUp->flowHasPathToSink(lane, visited);
         } else {
             return false;
         }
@@ -70,37 +70,75 @@ bool Underground::flowHasPathToSink(bool leftLane, std::vector<const GridObject*
             return false;
         }
 
-        const GridObject* outputObject = grid.gridObjectAt(outputRow, outputCol);
-        if(!outputObject->flowCanEnter(getDirection(), leftLane)) {
+        GridObject* outputObject = grid.gridObjectAt(outputRow, outputCol);
+        if(!outputObject->flowCanEnter(getDirection(), lane)) {
             return false;
         }
 
-        bool flowEntersLeftLane = outputObject->flowEntersLeftLane(getDirection(), leftLane);
-        bool flowHasPathToSink = outputObject->flowHasPathToSink(flowEntersLeftLane, visited);
+        Lane flowEntersLane = outputObject->flowEntersLane(getDirection(), lane);
+        bool flowHasPathToSink = outputObject->flowHasPathToSink(flowEntersLane, visited);
         return flowHasPathToSink;
+    }
+}
+
+void Underground::advanceLanes() {
+    if(down) {
+        Underground* otherHalf = getOtherHalf();
+        if(laneHasItem(Lane::LEFT)) {
+            simulationRecord->itemsLeftLane--;
+
+            if(otherHalf->receiveItem(Lane::LEFT)) {
+                simulationRecord->exportsLeftLane++;
+
+                std::cout << "Underground down pushed item left" << std::endl;
+            }
+        }
+
+        if(laneHasItem(Lane::RIGHT)) {
+            simulationRecord->itemsRightLane--;
+
+            if(otherHalf->receiveItem(Lane::RIGHT)) {
+                simulationRecord->exportsRightLane++;
+
+                std::cout << "Underground down pushed item right" << std::endl;
+            }
+        }
+    } else {
+        int nextRow = getRow();
+        int nextCol = getCol();
+        getDirection().translate(nextRow, nextCol);
+        GridObject* nextObject = grid.gridObjectAt(nextRow, nextCol);
+
+        if(laneHasItem(Lane::LEFT)) {
+            if(nextObject->flowCanEnter(getDirection(), Lane::LEFT)) {
+                simulationRecord->itemsLeftLane--;
+
+                Lane laneNext = nextObject->flowEntersLane(getDirection(), Lane::LEFT);
+                if(nextObject->receiveItem(laneNext)) {
+                    simulationRecord->exportsLeftLane++;
+
+                    std::cout << "Underground up pushed item left" << std::endl;
+                }
+            }
+        }
+
+        if(laneHasItem(Lane::RIGHT)) {
+            if(nextObject->flowCanEnter(getDirection(), Lane::RIGHT)) {
+                simulationRecord->itemsRightLane--;
+
+                Lane laneNext = nextObject->flowEntersLane(getDirection(), Lane::RIGHT);
+                if(nextObject->receiveItem(laneNext)) {
+                    simulationRecord->exportsRightLane++;
+
+                    std::cout << "Underground up pushed item right" << std::endl;
+                }
+            }
+        }
     }
 }
 
 std::string Underground::selectedString() const {
     return std::string("Underground Belt (") + (down ? "Entry" : "Exit") + ") - Ouput: " + getDirection().toString();
-}
-
-void Underground::propagateFlow(FlowRecord* flowRecord, bool leftLane) const {
-    if(!flowHasPathToSink(leftLane, std::vector<const GridObject*>())) {
-        throw std::logic_error("Cannot propagate flow, no path to Sink!");
-    }
-    
-    if(down) {
-        getOtherHalf()->propagateFlow(new FlowRecord(flowRecord, flowRecord->amount, this, leftLane), leftLane);
-    } else {
-        int nextRow = getRow();
-        int nextCol = getCol();
-        getDirection().translate(nextRow, nextCol);
-        const GridObject* nextObject = grid.gridObjectAt(nextRow, nextCol);
-        bool leftLaneNext = nextObject->flowEntersLeftLane(getDirection(), leftLane);
-
-        nextObject->propagateFlow(new FlowRecord(flowRecord, flowRecord->amount, this, leftLane), leftLaneNext);
-    }
 }
 
 AsciiImage Underground::getImage() const {
@@ -172,7 +210,7 @@ AsciiImage Underground::getImage() const {
     throw std::invalid_argument("Invalid direction!");
 }
 
-const Underground* Underground::getOtherHalf() const {
+Underground* Underground::getOtherHalf() const {
     int otherHalfRow = getRow();
     int otherHalfCol = getCol();
 
@@ -181,8 +219,8 @@ const Underground* Underground::getOtherHalf() const {
         otherHalfDir.translate(otherHalfRow, otherHalfCol);
 
         if(grid.isGridObjectAt(otherHalfRow, otherHalfCol)) {
-            const GridObject* go = grid.gridObjectAt(otherHalfRow, otherHalfCol);
-            const Underground* casted = dynamic_cast<const Underground*>(go);
+            GridObject* go = grid.gridObjectAt(otherHalfRow, otherHalfCol);
+            Underground* casted = (Underground*)go;
             if(casted != nullptr) {
                 if(casted->getDirection() == getDirection()) {
                     if(casted->down == down) {

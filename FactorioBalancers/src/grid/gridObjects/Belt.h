@@ -4,12 +4,15 @@
 class Belt : public GridObject {
 public:
     Belt(const Grid& grid, int row, int col, Direction direction);
-    virtual bool flowCanEnter(Direction incomingFlowDirection, bool leftLane) const;
-    virtual bool flowEntersLeftLane(Direction incomingFlowDirection, bool leftLane) const;
-    virtual bool flowHasPathToSink(bool leftLane, std::vector<const GridObject*> visited) const;
+
+    virtual bool flowCanEnter(Direction incomingFlowDirection, Lane lane) const;
+    virtual Lane flowEntersLane(Direction incomingFlowDirection, Lane lane) const;
+    virtual bool flowHasPathToSink(Lane lane, std::vector<const GridObject*> visited) const;
+
+    virtual void advanceLanes();
+
     virtual std::string selectedString() const;
 protected:
-    virtual void propagateFlow(FlowRecord* flowRecord, bool leftLane) const;
     virtual AsciiImage getImage() const;
 private:
     Direction determineInputDirection() const;

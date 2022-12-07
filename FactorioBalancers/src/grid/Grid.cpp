@@ -19,7 +19,7 @@ bool Grid::isGridObjectAt(int row, int col) const {
     });
 }
 
-const GridObject* Grid::gridObjectAt(int row, int col) const {
+GridObject* Grid::gridObjectAt(int row, int col) const {
     if(!isGridObjectAt(row, col)) {
         throw std::invalid_argument("No GridObject at given position!");
     }

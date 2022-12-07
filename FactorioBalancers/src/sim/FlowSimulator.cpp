@@ -2,35 +2,41 @@
 
 #include <vector>
 
+#include "../grid/gridObjects/Splitter.h"
+
 #include "../grid/gridObjects/items/ItemSource.h"
 #include "../grid/gridObjects/items/ItemSink.h"
 
 void FlowSimulator::runSimulation(const Grid& grid) {
-    std::vector<ItemSource*> itemSources;
-    std::vector<ItemSink*> itemSinks;
-    
     for(GridObject* cur : grid.allGridObjects()) {
-        ItemSource* asSource = dynamic_cast<ItemSource*>(cur);
-        if(asSource != nullptr) {
-            itemSources.push_back(asSource);
-        }
+        cur->clearSimulationCounters();
 
-        ItemSink* asSink = dynamic_cast<ItemSink*>(cur);
-        if(asSink != nullptr) {
-            itemSinks.push_back(asSink);
+        if(Splitter* curAsSplitter = dynamic_cast<Splitter*>(cur)) {
+            curAsSplitter->resetOutputSides();
         }
     }
 
-    for(ItemSink* curSink : itemSinks) {
-        curSink->resetFlowAmounts();
+    for(int i = 0; i < 100; i++) {
+        for(GridObject* cur : grid.allGridObjects()) {
+            cur->advanceLanes();
+        }
+
+        for(GridObject* cur : grid.allGridObjects()) {
+            cur->acceptIncomingItems();
+        }
     }
 
-    for(ItemSource* curSource : itemSources) {
-        if(curSource->flowHasPathToSink(true, std::vector<const GridObject*>())) {
-            curSource->propagateFlow(nullptr, true);
+    for(int i = 0; i < 100; i++) {
+        for(GridObject* cur : grid.allGridObjects()) {
+            if(dynamic_cast<ItemSource*>(cur)) {
+                // Do nothing to cur if cur is an ItemSource
+            } else {
+                cur->advanceLanes();
+            }
         }
-        if(curSource->flowHasPathToSink(false, std::vector<const GridObject*>())) {
-            curSource->propagateFlow(nullptr, false);
+
+        for(GridObject* cur : grid.allGridObjects()) {
+            cur->acceptIncomingItems();
         }
     }
 }

@@ -4,29 +4,29 @@
 
 #include <random>
 
-Splitter::Splitter(const Grid& grid, int row, int col, Direction direction, bool leftHalf) : 
-    GridObject(grid, row, col, direction),
-    leftHalf(leftHalf) {
+Splitter::Splitter(const Grid& grid, int row, int col, Direction direction, SplitterSide side) :
+    GridObject(grid, row, col, direction, new SplitterSimulationRecord()),
+    side(side) {
 }
 
-bool Splitter::flowCanEnter(Direction incomingFlowDirection, bool leftLane) const {
-    UNUSED(leftLane);
+bool Splitter::flowCanEnter(Direction incomingFlowDirection, Lane lane) const {
+    UNUSED(lane);
     return incomingFlowDirection == getDirection();
 }
 
-bool Splitter::flowEntersLeftLane(Direction incomingFlowDirection, bool leftLane) const {
+GridObject::Lane Splitter::flowEntersLane(Direction incomingFlowDirection, Lane lane) const {
     if(incomingFlowDirection != getDirection()) {
         throw std::invalid_argument("Input is not arriving from valid Direction!");
     }
 
-    return leftLane;
+    return lane;
 }
 
-bool Splitter::flowHasPathToSink(bool leftLane, std::vector<const GridObject*> visited) const {
+bool Splitter::flowHasPathToSink(Lane lane, std::vector<const GridObject*> visited) const {
     visited.push_back(this);
 
     if(std::find(visited.begin(), visited.end(), dynamic_cast<const GridObject*>(getOtherHalf())) == visited.end()) {
-        bool otherSide = getOtherHalf()->flowHasPathToSink(leftLane, visited);
+        bool otherSide = getOtherHalf()->flowHasPathToSink(lane, visited);
         if(otherSide) {
             return true;
         }
@@ -41,7 +41,7 @@ bool Splitter::flowHasPathToSink(bool leftLane, std::vector<const GridObject*> v
     }
 
     const GridObject* outputObject = grid.gridObjectAt(outputRow, outputCol);
-    if(!outputObject->flowCanEnter(getDirection(), leftLane)) {
+    if(!outputObject->flowCanEnter(getDirection(), lane)) {
         return false;
     }
 
@@ -49,60 +49,121 @@ bool Splitter::flowHasPathToSink(bool leftLane, std::vector<const GridObject*> v
         return false;
     }
 
-    bool flowEntersLeftLane = outputObject->flowEntersLeftLane(getDirection(), leftLane);
-    bool flowHasPathToSink = outputObject->flowHasPathToSink(flowEntersLeftLane, visited);
+    Lane flowEntersLane = outputObject->flowEntersLane(getDirection(), lane);
+    bool flowHasPathToSink = outputObject->flowHasPathToSink(flowEntersLane, visited);
     return flowHasPathToSink;
 }
 
-std::string Splitter::selectedString() const {
-    return std::string("Splitter (") + (leftHalf ? "Left" : "Right") + " Half) - Output: " + getDirection().toString();
+void Splitter::advanceLanes() {
+    int afterRow = getRow();
+    int afterCol = getCol();
+    getDirection().translate(afterRow, afterCol);
+    GridObject* afterMe = nullptr;
+    if(grid.isGridObjectAt(afterRow, afterCol)) {
+        afterMe = grid.gridObjectAt(afterRow, afterCol);
+    }
+
+    if(side == SplitterSide::LEFT) {
+        getDirection().clockwise().translate(afterRow, afterCol);
+    } else if(side == SplitterSide::RIGHT) {
+        getDirection().counterClockwise().translate(afterRow, afterCol);
+    } else {
+        throw std::logic_error("Invalid SplitterSide!");
+    }
+
+    GridObject* afterOther = nullptr;
+    if(grid.isGridObjectAt(afterRow, afterCol)) {
+        afterOther = grid.gridObjectAt(afterRow, afterCol);
+    }
+
+    if(laneHasItem(Lane::LEFT)) {
+        GridObject* preferred = afterMe;
+        GridObject* backup = afterOther;
+        if(getSplitterSimRecord()->leftLaneOutput != side) {
+            preferred = afterOther;
+            backup = afterMe;
+        }
+
+        bool outputFound = false;
+
+        if(preferred != nullptr && preferred->flowCanEnter(getDirection(), Lane::LEFT)) {
+            simulationRecord->itemsLeftLane--;
+            outputFound = true;
+
+            Lane laneNextPreferred = preferred->flowEntersLane(getDirection(), Lane::LEFT);
+            if(preferred->receiveItem(laneNextPreferred)) {
+                simulationRecord->exportsLeftLane++;
+                getSplitterSimRecord()->toggleOutput(Lane::LEFT);
+                getOtherHalf()->getSplitterSimRecord()->toggleOutput(Lane::LEFT);
+
+                std::cout << "Splitter pushed item left" << std::endl;
+            }
+        }
+
+        if(!outputFound) {
+            if(backup != nullptr && backup->flowCanEnter(getDirection(), Lane::LEFT)) {
+                simulationRecord->itemsLeftLane--;
+
+                Lane laneNextBackup = backup->flowEntersLane(getDirection(), Lane::LEFT);
+                if(backup->receiveItem(laneNextBackup)) {
+                    simulationRecord->exportsLeftLane++;
+
+                    std::cout << "Splitter pushed item left (backup)" << std::endl;
+                }
+            }
+        }
+    }
+
+    if(laneHasItem(Lane::RIGHT)) {
+        GridObject* preferred = afterMe;
+        GridObject* backup = afterOther;
+        if(getSplitterSimRecord()->rightLaneOutput != side) {
+            preferred = afterOther;
+            backup = afterMe;
+        }
+
+        bool outputFound = false;
+
+        if(preferred != nullptr && preferred->flowCanEnter(getDirection(), Lane::RIGHT)) {
+            simulationRecord->itemsRightLane--;
+            outputFound = true;
+
+            Lane laneNextPreferred = preferred->flowEntersLane(getDirection(), Lane::RIGHT);
+            if(preferred->receiveItem(laneNextPreferred)) {
+                simulationRecord->exportsRightLane++;
+                getSplitterSimRecord()->toggleOutput(Lane::RIGHT);
+                getOtherHalf()->getSplitterSimRecord()->toggleOutput(Lane::RIGHT);
+
+                std::cout << "Splitter pushed item right" << std::endl;
+            }
+        }
+
+        if(!outputFound) {
+            if(backup != nullptr && backup->flowCanEnter(getDirection(), Lane::RIGHT)) {
+                simulationRecord->itemsRightLane--;
+
+                Lane laneNextBackup = backup->flowEntersLane(getDirection(), Lane::RIGHT);
+                if(backup->receiveItem(laneNextBackup)) {
+                    simulationRecord->exportsRightLane++;
+
+                    std::cout << "Splitter pushed item right (backup)" << std::endl;
+                }
+            }
+        }
+    }
 }
 
-void Splitter::propagateFlow(FlowRecord* flowRecord, bool leftLane) const {
-    if(!flowHasPathToSink(leftLane, std::vector<const GridObject*>())) {
-        throw std::logic_error("Cannot propagate flow, no path to Sink!");
-    }
+void Splitter::resetOutputSides() {
+    getSplitterSimRecord()->leftLaneOutput = SplitterSide::LEFT;
+    getSplitterSimRecord()->rightLaneOutput = SplitterSide::LEFT;
+}
 
-    int nextRow = getRow();
-    int nextCol = getCol();
-    getDirection().translate(nextRow, nextCol);
-    const GridObject* nextObject = grid.gridObjectAt(nextRow, nextCol);
-    bool leftLaneNext = nextObject->flowEntersLeftLane(getDirection(), leftLane);
-    bool flowPastMe = nextObject->flowHasPathToSink(leftLaneNext, std::vector<const GridObject*>());
-
-    const Splitter* otherHalf = getOtherHalf();
-    int nextRowOther = otherHalf->getRow();
-    int nextColOther = otherHalf->getCol();
-    getDirection().translate(nextRowOther, nextColOther);
-    const GridObject* nextObjectOther = grid.gridObjectAt(nextRowOther, nextColOther);
-    bool leftLaneNextOther = nextObjectOther->flowEntersLeftLane(getDirection(), leftLane);
-    bool flowPastOther = nextObjectOther->flowHasPathToSink(leftLaneNextOther, std::vector<const GridObject*>());
-
-    if(flowPastMe && flowPastOther) {
-        Fraction amountEachSide = flowRecord->amount / 2;
-        if(amountEachSide == 0) {
-            std::random_device rd = std::random_device();
-            std::random_device::result_type rand = rd();
-            if(rand < (rd.min() + rd.max()) / 2) {
-                nextObject->propagateFlow(new FlowRecord(flowRecord, flowRecord->amount, this, leftLane), leftLaneNext);
-            } else {
-                nextObjectOther->propagateFlow(new FlowRecord(flowRecord, flowRecord->amount, this, leftLane), leftLaneNextOther);
-            }
-        } else {
-            nextObject->propagateFlow(new FlowRecord(new FlowRecord(flowRecord), amountEachSide, this, leftLane), leftLaneNext);
-            nextObjectOther->propagateFlow(new FlowRecord(flowRecord, amountEachSide, this, leftLane), leftLaneNextOther);
-        }
-    } else if(flowPastMe) {
-        nextObject->propagateFlow(new FlowRecord(flowRecord, flowRecord->amount, this, leftLane), leftLaneNext);
-    } else if(flowPastOther) {
-        nextObjectOther->propagateFlow(new FlowRecord(flowRecord, flowRecord->amount, this, leftLane), leftLaneNextOther);
-    } else {
-        throw std::logic_error("No flow on either Spliter output!");
-    }
+std::string Splitter::selectedString() const {
+    return std::string("Splitter (") + (side == SplitterSide::LEFT ? "Left" : "Right") + " Half) - Output: " + getDirection().toString();
 }
 
 AsciiImage Splitter::getImage() const {
-    if(leftHalf) {
+    if(side == SplitterSide::LEFT) {
         switch(getDirection()) {
         case Direction::NORTH:
             return {
@@ -133,7 +194,7 @@ AsciiImage Splitter::getImage() const {
                 "--------"
             };
         }
-    } else {
+    } else if (side == SplitterSide::RIGHT) {
         switch(getDirection()) {
         case Direction::NORTH:
             return {
@@ -166,19 +227,35 @@ AsciiImage Splitter::getImage() const {
         }
     }
 
-    throw std::logic_error("Invalid direction!");
+    throw std::logic_error("Invalid SplitterSide or Direction!");
 }
 
-const Splitter* Splitter::getOtherHalf() const {
-    if(leftHalf) {
+Splitter* Splitter::getOtherHalf() const {
+    if(side == SplitterSide::LEFT) {
         int rightRow = getRow();
         int rightCol = getCol();
         getDirection().clockwise().translate(rightRow, rightCol);
-        return dynamic_cast<const Splitter*>(grid.gridObjectAt(rightRow, rightCol));
-    } else {
+        return (Splitter*)grid.gridObjectAt(rightRow, rightCol);
+    } else if (side == SplitterSide::RIGHT) {
         int leftRow = getRow();
         int leftCol = getCol();
         getDirection().counterClockwise().translate(leftRow, leftCol);
-        return dynamic_cast<const Splitter*>(grid.gridObjectAt(leftRow, leftCol));
+        return (Splitter*)grid.gridObjectAt(leftRow, leftCol);
+    } else {
+        throw std::logic_error("Invalid SplitterSide!");
+    }
+}
+
+Splitter::SplitterSimulationRecord* Splitter::getSplitterSimRecord() const {
+    return (SplitterSimulationRecord*)simulationRecord;
+}
+
+void Splitter::SplitterSimulationRecord::toggleOutput(Lane lane) {
+    if(lane == Lane::LEFT) {
+        leftLaneOutput = leftLaneOutput == SplitterSide::LEFT ? SplitterSide::RIGHT : SplitterSide::LEFT;
+    } else if(lane == Lane::RIGHT) {
+        rightLaneOutput = rightLaneOutput == SplitterSide::LEFT ? SplitterSide::RIGHT : SplitterSide::LEFT;
+    } else {
+        throw std::invalid_argument("Invalid Lane!");
     }
 }

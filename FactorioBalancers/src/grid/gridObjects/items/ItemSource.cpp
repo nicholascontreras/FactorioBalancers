@@ -3,22 +3,22 @@
 #include <stdexcept>
 
 ItemSource::ItemSource(const Grid& grid, int row, int col) :
-    GridObject(grid, row, col, Direction::EAST) {
+    GridObject(grid, row, col, Direction::EAST, new SimulationRecord()) {
 }
 
-bool ItemSource::flowCanEnter(Direction incomingFlowDirection, bool leftLane) const {
+bool ItemSource::flowCanEnter(Direction incomingFlowDirection, Lane lane) const {
     UNUSED(incomingFlowDirection);
-    UNUSED(leftLane);
+    UNUSED(lane);
     return false;
 }
 
-bool ItemSource::flowEntersLeftLane(Direction incomingFlowDirection, bool leftLane) const {
+GridObject::Lane ItemSource::flowEntersLane(Direction incomingFlowDirection, Lane lane) const {
     UNUSED(incomingFlowDirection);
-    UNUSED(leftLane);
+    UNUSED(lane);
     throw std::logic_error("Flow cannot enter ItemSource!");
 }
 
-bool ItemSource::flowHasPathToSink(bool leftLane, std::vector<const GridObject*> visited) const {
+bool ItemSource::flowHasPathToSink(Lane lane, std::vector<const GridObject*> visited) const {
     visited.push_back(this);
 
     int outputRow = getRow();
@@ -30,35 +30,46 @@ bool ItemSource::flowHasPathToSink(bool leftLane, std::vector<const GridObject*>
     }
 
     const GridObject* outputObject = grid.gridObjectAt(outputRow, outputCol);
-    if(!outputObject->flowCanEnter(getDirection(), leftLane)) {
+    if(!outputObject->flowCanEnter(getDirection(), lane)) {
         return false;
     }
 
-    bool flowEntersLeftLane = outputObject->flowEntersLeftLane(getDirection(), leftLane);
-    bool flowHasPathToSink = outputObject->flowHasPathToSink(flowEntersLeftLane, visited);
+    Lane flowEntersLane = outputObject->flowEntersLane(getDirection(), lane);
+    bool flowHasPathToSink = outputObject->flowHasPathToSink(flowEntersLane, visited);
     return flowHasPathToSink;
+}
+
+void ItemSource::advanceLanes() {
+    int nextRow = getRow();
+    int nextCol = getCol();
+    getDirection().translate(nextRow, nextCol);
+    GridObject* nextObject = grid.gridObjectAt(nextRow, nextCol);
+
+    if(nextObject->flowCanEnter(getDirection(), Lane::LEFT)) {
+        Lane laneNext = nextObject->flowEntersLane(getDirection(), Lane::LEFT);
+        if (nextObject->receiveItem(laneNext)) {
+            simulationRecord->exportsLeftLane++;
+
+            std::cout << "Source pushed item left" << std::endl;
+        }
+    }
+
+    if(nextObject->flowCanEnter(getDirection(), Lane::RIGHT)) {
+        Lane laneNext = nextObject->flowEntersLane(getDirection(), Lane::RIGHT);
+        if (nextObject->receiveItem(laneNext)) {
+            simulationRecord->exportsRightLane++;
+
+            std::cout << "Source pushed item right" << std::endl;
+        }
+    }
 }
 
 std::string ItemSource::selectedString() const {
     return std::string("Item Source\r\n") +
-    "Path (L): " + (flowHasPathToSink(true, std::vector<const GridObject*>()) ? "T" : "F") +
-        " (R): " + (flowHasPathToSink(false, std::vector<const GridObject*>()) ? "T" : "F");
-}
-
-void ItemSource::propagateFlow(FlowRecord* flowRecord, bool leftLane) const {
-    UNUSED(flowRecord);
-
-    if(!flowHasPathToSink(leftLane, std::vector<const GridObject*>())) {
-        throw std::logic_error("Cannot propagate flow, no path to Sink!");
-    }
-
-    int nextRow = getRow();
-    int nextCol = getCol();
-    getDirection().translate(nextRow, nextCol);
-    const GridObject* nextObject = grid.gridObjectAt(nextRow, nextCol);
-    bool leftLaneNext = nextObject->flowEntersLeftLane(getDirection(), leftLane);
-
-    nextObject->propagateFlow(new FlowRecord(nullptr, 1, this, leftLane), leftLaneNext);
+    "Path (L): " + (flowHasPathToSink(Lane::LEFT, std::vector<const GridObject*>()) ? "T" : "F") +
+        " (R): " + (flowHasPathToSink(Lane::RIGHT, std::vector<const GridObject*>()) ? "T" : "F") + "\r\n" +
+    "Total (L): " + std::to_string(simulationRecord->exportsLeftLane) +
+         " (R): " + std::to_string(simulationRecord->exportsRightLane);
 }
 
 AsciiImage ItemSource::getImage() const {
