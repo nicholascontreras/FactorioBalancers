@@ -87,28 +87,24 @@ void Splitter::advanceLanes() {
         bool outputFound = false;
 
         if(preferred != nullptr && preferred->flowCanEnter(getDirection(), Lane::LEFT)) {
-            simulationRecord->itemsLeftLane--;
-            outputFound = true;
-
             Lane laneNextPreferred = preferred->flowEntersLane(getDirection(), Lane::LEFT);
             if(preferred->receiveItem(laneNextPreferred)) {
+                outputFound = true;
+
                 simulationRecord->exportsLeftLane++;
+                simulationRecord->itemsLeftLane--;
                 getSplitterSimRecord()->toggleOutput(Lane::LEFT);
                 getOtherHalf()->getSplitterSimRecord()->toggleOutput(Lane::LEFT);
-
-                std::cout << "Splitter pushed item left" << std::endl;
             }
         }
 
         if(!outputFound) {
             if(backup != nullptr && backup->flowCanEnter(getDirection(), Lane::LEFT)) {
-                simulationRecord->itemsLeftLane--;
 
                 Lane laneNextBackup = backup->flowEntersLane(getDirection(), Lane::LEFT);
                 if(backup->receiveItem(laneNextBackup)) {
                     simulationRecord->exportsLeftLane++;
-
-                    std::cout << "Splitter pushed item left (backup)" << std::endl;
+                    simulationRecord->itemsLeftLane--;
                 }
             }
         }
@@ -125,28 +121,24 @@ void Splitter::advanceLanes() {
         bool outputFound = false;
 
         if(preferred != nullptr && preferred->flowCanEnter(getDirection(), Lane::RIGHT)) {
-            simulationRecord->itemsRightLane--;
-            outputFound = true;
-
             Lane laneNextPreferred = preferred->flowEntersLane(getDirection(), Lane::RIGHT);
             if(preferred->receiveItem(laneNextPreferred)) {
+                outputFound = true;
+
                 simulationRecord->exportsRightLane++;
+                simulationRecord->itemsRightLane--;
                 getSplitterSimRecord()->toggleOutput(Lane::RIGHT);
                 getOtherHalf()->getSplitterSimRecord()->toggleOutput(Lane::RIGHT);
-
-                std::cout << "Splitter pushed item right" << std::endl;
             }
         }
 
         if(!outputFound) {
             if(backup != nullptr && backup->flowCanEnter(getDirection(), Lane::RIGHT)) {
-                simulationRecord->itemsRightLane--;
 
                 Lane laneNextBackup = backup->flowEntersLane(getDirection(), Lane::RIGHT);
                 if(backup->receiveItem(laneNextBackup)) {
                     simulationRecord->exportsRightLane++;
-
-                    std::cout << "Splitter pushed item right (backup)" << std::endl;
+                    simulationRecord->itemsRightLane--;
                 }
             }
         }
@@ -159,7 +151,9 @@ void Splitter::resetOutputSides() {
 }
 
 std::string Splitter::selectedString() const {
-    return std::string("Splitter (") + (side == SplitterSide::LEFT ? "Left" : "Right") + " Half) - Output: " + getDirection().toString();
+    return std::string("Splitter (") + (side == SplitterSide::LEFT ? "Left" : "Right") + " Half) - Output: " + getDirection().toString() + "\r\n" +
+        "Items (L): " + std::to_string(simulationRecord->itemsLeftLane) +
+             " (R): " + std::to_string(simulationRecord->itemsRightLane);
 }
 
 AsciiImage Splitter::getImage() const {

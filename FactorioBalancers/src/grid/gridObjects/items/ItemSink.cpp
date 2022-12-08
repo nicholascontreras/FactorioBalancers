@@ -31,14 +31,10 @@ void ItemSink::advanceLanes() {
     if(laneHasItem(Lane::LEFT)) {
         simulationRecord->itemsLeftLane--;
         simulationRecord->exportsLeftLane++;
-
-        std::cout << "ItemSink pushed item left" << std::endl;
     }
     if(laneHasItem(Lane::RIGHT)) {
         simulationRecord->itemsRightLane--;
         simulationRecord->exportsRightLane++;
-
-        std::cout << "ItemSink pushed item right" << std::endl;
     }
 }
 

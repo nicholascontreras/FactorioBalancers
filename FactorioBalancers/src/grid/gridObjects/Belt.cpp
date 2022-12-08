@@ -59,26 +59,22 @@ void Belt::advanceLanes() {
 
     if(laneHasItem(Lane::LEFT)) {
         if(nextObject->flowCanEnter(getDirection(), Lane::LEFT)) {
-            simulationRecord->itemsLeftLane--;
 
             Lane laneNext = nextObject->flowEntersLane(getDirection(), Lane::LEFT);
             if (nextObject->receiveItem(laneNext)) {
                 simulationRecord->exportsLeftLane++;
-
-                std::cout << "Belt (" << getRow() << "," << getCol() << ") pushed item left" << std::endl;
+                simulationRecord->itemsLeftLane--;
             }
         }
     }
 
     if(laneHasItem(Lane::RIGHT)) {
         if(nextObject->flowCanEnter(getDirection(), Lane::RIGHT)) {
-            simulationRecord->itemsRightLane--;
 
             Lane laneNext = nextObject->flowEntersLane(getDirection(), Lane::RIGHT);
             if (nextObject->receiveItem(laneNext)) {
                 simulationRecord->exportsRightLane++;
-
-                std::cout << "Belt (" << getRow() << "," << getCol() << ") pushed item right" << std::endl;
+                simulationRecord->itemsRightLane--;
             }
         }
     }
@@ -87,9 +83,9 @@ void Belt::advanceLanes() {
 std::string Belt::selectedString() const {
     return "Belt - Output: " + getDirection().toString() + "\r\n" +
         "Path (L): " + (flowHasPathToSink(Lane::LEFT, std::vector<const GridObject*>()) ? "T" : "F") +
-        " (R): " + (flowHasPathToSink(Lane::RIGHT, std::vector<const GridObject*>()) ? "T" : "F") + "\r\r" + 
-        "Overload (L): " + std::to_string(simulationRecord->blockedInsertionsLeftLane) + 
-                " (R): " + std::to_string(simulationRecord->blockedInsertionsRightLane);
+        " (R): " + (flowHasPathToSink(Lane::RIGHT, std::vector<const GridObject*>()) ? "T" : "F") + "\r\n" + 
+        "Items (L): " + std::to_string(simulationRecord->itemsLeftLane) + 
+             " (R): " + std::to_string(simulationRecord->itemsRightLane);
 }
 
 AsciiImage Belt::getImage() const {

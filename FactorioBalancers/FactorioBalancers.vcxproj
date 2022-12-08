@@ -148,6 +148,7 @@
     <ClCompile Include="src\grid\gridObjects\Belt.cpp" />
     <ClCompile Include="src\LayoutBrowser.cpp" />
     <ClCompile Include="src\sim\LayoutSolver.cpp" />
+    <ClCompile Include="src\sim\LayoutTester.cpp" />
     <ClCompile Include="src\util\Direction.cpp" />
     <ClCompile Include="src\grid\Grid.cpp" />
     <ClCompile Include="src\grid\gridObjects\GridObject.cpp" />
@@ -164,6 +165,7 @@
     <ClInclude Include="src\grid\gridObjects\Belt.h" />
     <ClInclude Include="src\LayoutBrowser.h" />
     <ClInclude Include="src\sim\LayoutSolver.h" />
+    <ClInclude Include="src\sim\LayoutTester.h" />
     <ClInclude Include="src\util\Direction.h" />
     <ClInclude Include="src\grid\Grid.h" />
     <ClInclude Include="src\grid\gridObjects\GridObject.h" />

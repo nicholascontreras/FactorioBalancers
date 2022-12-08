@@ -85,22 +85,16 @@ void Underground::advanceLanes() {
     if(down) {
         Underground* otherHalf = getOtherHalf();
         if(laneHasItem(Lane::LEFT)) {
-            simulationRecord->itemsLeftLane--;
-
             if(otherHalf->receiveItem(Lane::LEFT)) {
                 simulationRecord->exportsLeftLane++;
-
-                std::cout << "Underground down pushed item left" << std::endl;
+                simulationRecord->itemsLeftLane--;
             }
         }
 
         if(laneHasItem(Lane::RIGHT)) {
-            simulationRecord->itemsRightLane--;
-
             if(otherHalf->receiveItem(Lane::RIGHT)) {
                 simulationRecord->exportsRightLane++;
-
-                std::cout << "Underground down pushed item right" << std::endl;
+                simulationRecord->itemsRightLane--;
             }
         }
     } else {
@@ -111,11 +105,11 @@ void Underground::advanceLanes() {
 
         if(laneHasItem(Lane::LEFT)) {
             if(nextObject->flowCanEnter(getDirection(), Lane::LEFT)) {
-                simulationRecord->itemsLeftLane--;
 
                 Lane laneNext = nextObject->flowEntersLane(getDirection(), Lane::LEFT);
                 if(nextObject->receiveItem(laneNext)) {
                     simulationRecord->exportsLeftLane++;
+                    simulationRecord->itemsLeftLane--;
 
                     std::cout << "Underground up pushed item left" << std::endl;
                 }
@@ -124,11 +118,11 @@ void Underground::advanceLanes() {
 
         if(laneHasItem(Lane::RIGHT)) {
             if(nextObject->flowCanEnter(getDirection(), Lane::RIGHT)) {
-                simulationRecord->itemsRightLane--;
 
                 Lane laneNext = nextObject->flowEntersLane(getDirection(), Lane::RIGHT);
                 if(nextObject->receiveItem(laneNext)) {
                     simulationRecord->exportsRightLane++;
+                    simulationRecord->itemsRightLane--;
 
                     std::cout << "Underground up pushed item right" << std::endl;
                 }
@@ -138,7 +132,9 @@ void Underground::advanceLanes() {
 }
 
 std::string Underground::selectedString() const {
-    return std::string("Underground Belt (") + (down ? "Entry" : "Exit") + ") - Ouput: " + getDirection().toString();
+    return std::string("Underground Belt (") + (down ? "Entry" : "Exit") + ") - Ouput: " + getDirection().toString() + "\r\n" +
+        "Items (L): " + std::to_string(simulationRecord->itemsLeftLane) +
+             " (R): " + std::to_string(simulationRecord->itemsRightLane);
 }
 
 AsciiImage Underground::getImage() const {

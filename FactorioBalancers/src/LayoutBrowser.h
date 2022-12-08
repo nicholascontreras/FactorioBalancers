@@ -9,7 +9,7 @@ public:
 
 private:
     static int selectedRow, selectedCol;
-    static bool runSim;
+    static bool runTests;
 
     static void waitForKey();
 

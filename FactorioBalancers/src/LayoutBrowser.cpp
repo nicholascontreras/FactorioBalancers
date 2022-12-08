@@ -4,11 +4,11 @@
 #include <iostream>
 #include <string>
 
-#include "sim/FlowSimulator.h"
+#include "sim/LayoutTester.h"
 #include "grid/gridObjects/GridObject.h"
 
 int LayoutBrowser::selectedRow = 0, LayoutBrowser::selectedCol = 0;
-bool LayoutBrowser::runSim = false;
+bool LayoutBrowser::runTests = false;
 
 void LayoutBrowser::browseLayout(const Grid& grid) {
 
@@ -19,12 +19,14 @@ void LayoutBrowser::browseLayout(const Grid& grid) {
 
     while(true) {
 
-        if(runSim) {
-            runSim = false;
-            FlowSimulator::runSimulation(grid);
+        std::cout << clear << std::endl;
+
+        if(runTests) {
+            runTests = false;
+            std::string results = LayoutTester::testLayout(grid);
+            std::cout << results << std::endl;
         }
 
-        std::cout << clear << std::endl;
         std::cout << grid.draw().toString() << std::endl;
         std::cout << "Row: " << selectedRow << " Col: " << selectedCol << std::endl;
 
@@ -64,7 +66,7 @@ void LayoutBrowser::waitForKey() {
             selectedCol = 0;
         }
 
-    } else if(c == 'r') {
-        runSim = true;
+    } else if(c == 't') {
+        runTests = true;
     }
 }

@@ -49,8 +49,6 @@ void ItemSource::advanceLanes() {
         Lane laneNext = nextObject->flowEntersLane(getDirection(), Lane::LEFT);
         if (nextObject->receiveItem(laneNext)) {
             simulationRecord->exportsLeftLane++;
-
-            std::cout << "Source pushed item left" << std::endl;
         }
     }
 
@@ -58,8 +56,6 @@ void ItemSource::advanceLanes() {
         Lane laneNext = nextObject->flowEntersLane(getDirection(), Lane::RIGHT);
         if (nextObject->receiveItem(laneNext)) {
             simulationRecord->exportsRightLane++;
-
-            std::cout << "Source pushed item right" << std::endl;
         }
     }
 }
