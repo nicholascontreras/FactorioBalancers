@@ -3,6 +3,8 @@
 #include <Windows.h>
 #include <stdexcept>
 
+#include "Underground.h"
+
 Belt::Belt(const Grid& grid, int row, int col, Direction direction) : 
     GridObject(grid, row, col, direction, new SimulationRecord()) {
 }
@@ -95,21 +97,21 @@ AsciiImage Belt::getImage() const {
         switch(getDirection()) {
         case Direction::WEST:
             return {
-                "2 V  V |",
+                "2      |",
                 "<      |",
                 "<      |",
                 "-------2"
             };
         case Direction::SOUTH:
             return {
-                "| V  V |",
+                "|      |",
                 "|      |",
                 "|      |",
                 "| V  V |"
             };
         case Direction::EAST:
             return {
-                "| V  V 1",
+                "|      1",
                 "|      >",
                 "|      >",
                 "1-------"
@@ -199,8 +201,15 @@ Direction Belt::determineInputDirection() const {
     getDirection().reverse().translate(behindRow, behindCol);
 
     if(grid.isGridObjectAt(behindRow, behindCol)) {
-        if(grid.gridObjectAt(behindRow, behindCol)->getDirection() == getDirection()) {
-            return getDirection();
+        GridObject* behind = grid.gridObjectAt(behindRow, behindCol);
+        if(behind->getDirection() == getDirection()) {
+            if(Underground* asUnderground = dynamic_cast<Underground*>(behind)) {
+                if(!asUnderground->isDown()) {
+                    return getDirection();
+                }
+            } else {
+                return getDirection();
+            }
         }
     }
 

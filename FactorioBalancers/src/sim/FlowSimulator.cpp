@@ -28,11 +28,10 @@ void FlowSimulator::runSimulation(const Grid& grid, int numTestItems, std::vecto
     // Prime system with items
     for(int i = 0; i < numTestItems; i++) {
         for(GridObject* cur : allWithoutDisabled) {
-            cur->acceptIncomingItems();
-        }
-
-        for(GridObject* cur : allWithoutDisabled) {
             cur->advanceLanes();
+        }
+        for(GridObject* cur : allWithoutDisabled) {
+            cur->acceptIncomingItems();
         }
     }
 
@@ -47,21 +46,37 @@ void FlowSimulator::runSimulation(const Grid& grid, int numTestItems, std::vecto
     }
 
     // Run data leg of simulation 
-    for(int i = 0; i < 100; i++) {
-        for(GridObject* cur : allWithoutDisabled) {
-            cur->acceptIncomingItems();
-        }
-
+    for(int i = 0; i < numTestItems; i++) {
         for(GridObject* cur : allWithoutDisabled) {
             cur->advanceLanes();
+        }
+        for(GridObject* cur : allWithoutDisabled) {
+            cur->acceptIncomingItems();
         }
     }
 
     // Allow Sinks to suck items deposited to them on the last sim step into their counts
     for(GridObject* cur : allWithoutDisabled) {
         if(ItemSink* curAsSink = dynamic_cast<ItemSink*>(cur)) {
-            curAsSink->acceptIncomingItems();
             curAsSink->advanceLanes();
+        }
+    }
+}
+
+void FlowSimulator::stepSimulation(const Grid& grid) {
+    for(GridObject* cur : grid.allGridObjects()) {
+        cur->advanceLanes();
+    }
+    for(GridObject* cur : grid.allGridObjects()) {
+        cur->acceptIncomingItems();
+    }
+}
+
+void FlowSimulator::resetSimulation(const Grid& grid) {
+    for(GridObject* cur : grid.allGridObjects()) {
+        cur->clearSimulationCounters();
+        if(Splitter* curAsSplitter = dynamic_cast<Splitter*>(cur)) {
+            curAsSplitter->resetOutputSides();
         }
     }
 }

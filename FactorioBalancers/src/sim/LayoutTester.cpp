@@ -54,19 +54,31 @@ std::string LayoutTester::testIsBalancer(const Grid& grid) {
 
     std::vector<std::vector<ItemSource*>> sourceSubsets = subsets(itemSources);
     for(std::vector<ItemSource*> curSourceSubset : sourceSubsets) {
-        int expectedItemsPerSink = 100;
-        FlowSimulator::runSimulation(grid, expectedItemsPerSink * (int)itemSinks.size(), curSourceSubset, itemSinks);
+        FlowSimulator::runSimulation(grid, 100, curSourceSubset, itemSinks);
+
+        int sumOfItemsLeftLane = 0;
+        int sumOfItemsRightLane = 0;
+        int numSinks = 0;
 
         for(ItemSink* curSink : itemSinks) {
             const GridObject::SimulationRecord* record = curSink->getSimulationRecord();
-            if(std::abs(record->exportsLeftLane - expectedItemsPerSink) > 1) {
-                return "Sink at (" + std::to_string(curSink->getRow()) + "," + std::to_string(curSink->getCol()) +
-                    "), Left Lane expected " + std::to_string(expectedItemsPerSink) + " items, got " + std::to_string(record->exportsLeftLane) + ".";
+            if(numSinks > 0) {
+                int avgItemsLeftLane = sumOfItemsLeftLane / numSinks;
+                int avgItemsRightLane = sumOfItemsRightLane / numSinks;
+
+                if(std::abs(record->exportsLeftLane - avgItemsLeftLane) > 1) {
+                    return "Sink at (" + std::to_string(curSink->getRow()) + "," + std::to_string(curSink->getCol()) +
+                        "), Left Lane expected " + std::to_string(avgItemsLeftLane) + "% flow, got " + std::to_string(record->exportsLeftLane) + "%.";
+                }
+                if(std::abs(record->exportsRightLane - avgItemsRightLane) > 1) {
+                    return "Sink at (" + std::to_string(curSink->getRow()) + "," + std::to_string(curSink->getCol()) +
+                        "), Right Lane expected " + std::to_string(avgItemsRightLane) + "% flow, got " + std::to_string(record->exportsRightLane) + "%.";
+                }
             }
-            if(std::abs(record->exportsRightLane - expectedItemsPerSink) > 1) {
-                return "Sink at (" + std::to_string(curSink->getRow()) + "," + std::to_string(curSink->getCol()) +
-                    "), Right Lane expected " + std::to_string(expectedItemsPerSink) + " items, got " + std::to_string(record->exportsRightLane) + ".";
-            }
+
+            sumOfItemsLeftLane += record->exportsLeftLane;
+            sumOfItemsRightLane += record->exportsRightLane;
+            numSinks++;
         }
     }
 

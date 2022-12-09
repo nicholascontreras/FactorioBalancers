@@ -11,6 +11,7 @@ public:
 
     virtual void advanceLanes();
 
+    bool isDown() const;
     virtual std::string selectedString() const;
 protected:
     virtual AsciiImage getImage() const;

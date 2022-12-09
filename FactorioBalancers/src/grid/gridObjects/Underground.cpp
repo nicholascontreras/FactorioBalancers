@@ -110,8 +110,6 @@ void Underground::advanceLanes() {
                 if(nextObject->receiveItem(laneNext)) {
                     simulationRecord->exportsLeftLane++;
                     simulationRecord->itemsLeftLane--;
-
-                    std::cout << "Underground up pushed item left" << std::endl;
                 }
             }
         }
@@ -123,12 +121,14 @@ void Underground::advanceLanes() {
                 if(nextObject->receiveItem(laneNext)) {
                     simulationRecord->exportsRightLane++;
                     simulationRecord->itemsRightLane--;
-
-                    std::cout << "Underground up pushed item right" << std::endl;
                 }
             }
         }
     }
+}
+
+bool Underground::isDown() const {
+    return down;
 }
 
 std::string Underground::selectedString() const {
@@ -216,7 +216,7 @@ Underground* Underground::getOtherHalf() const {
 
         if(grid.isGridObjectAt(otherHalfRow, otherHalfCol)) {
             GridObject* go = grid.gridObjectAt(otherHalfRow, otherHalfCol);
-            Underground* casted = (Underground*)go;
+            Underground* casted = dynamic_cast<Underground*>(go);
             if(casted != nullptr) {
                 if(casted->getDirection() == getDirection()) {
                     if(casted->down == down) {
