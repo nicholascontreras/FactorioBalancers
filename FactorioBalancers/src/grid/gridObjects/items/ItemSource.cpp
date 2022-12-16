@@ -18,8 +18,8 @@ GridObject::Lane ItemSource::flowEntersLane(Direction incomingFlowDirection, Lan
     throw std::logic_error("Flow cannot enter ItemSource!");
 }
 
-bool ItemSource::flowHasPathToSink(Lane lane, std::vector<const GridObject*> visited) const {
-    visited.push_back(this);
+bool ItemSource::flowHasPathToSink(Lane lane, std::vector<std::pair<const GridObject*, Lane>> visited) const {
+    visited.push_back({ this, lane });
 
     int outputRow = getRow();
     int outputCol = getCol();
@@ -62,8 +62,8 @@ void ItemSource::advanceLanes() {
 
 std::string ItemSource::selectedString() const {
     return std::string("Item Source\r\n") +
-    "Path (L): " + (flowHasPathToSink(Lane::LEFT, std::vector<const GridObject*>()) ? "T" : "F") +
-        " (R): " + (flowHasPathToSink(Lane::RIGHT, std::vector<const GridObject*>()) ? "T" : "F") + "\r\n" +
+    "Path (L): " + (flowHasPathToSink(Lane::LEFT) ? "T" : "F") +
+        " (R): " + (flowHasPathToSink(Lane::RIGHT) ? "T" : "F") + "\r\n" +
     "Total (L): " + std::to_string(simulationRecord->exportsLeftLane) +
          " (R): " + std::to_string(simulationRecord->exportsRightLane);
 }

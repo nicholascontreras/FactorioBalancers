@@ -7,10 +7,10 @@
 
 class LayoutSolver {
 public:
-    void findLayout(Grid& grid);
+    static void findLayout(Grid& grid);
 private:
-    void resetGrid(Grid& grid);
-    bool addRandomToGrid(Grid& grid);
+    static void resetGrid(Grid& grid);
+    static bool addRandomToGrid(Grid& grid);
 
 
 };

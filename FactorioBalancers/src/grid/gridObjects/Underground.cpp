@@ -51,8 +51,8 @@ GridObject::Lane Underground::flowEntersLane(Direction incomingFlowDirection, La
     throw std::invalid_argument("Input is not arriving from valid Direction!");
 }
 
-bool Underground::flowHasPathToSink(Lane lane, std::vector<const GridObject*> visited) const {
-    visited.push_back(this);
+bool Underground::flowHasPathToSink(Lane lane, std::vector<std::pair<const GridObject*, Lane>> visited) const {
+    visited.push_back({ this, lane });
     
     if(down) {
         Underground* myUp = getOtherHalf();
@@ -65,6 +65,10 @@ bool Underground::flowHasPathToSink(Lane lane, std::vector<const GridObject*> vi
         int outputRow = getRow();
         int outputCol = getCol();
         getDirection().translate(outputRow, outputCol);
+
+        if(!grid.isOnGrid(outputRow, outputCol)) {
+            return false;
+        }
 
         if(!grid.isGridObjectAt(outputRow, outputCol)) {
             return false;
@@ -84,43 +88,50 @@ bool Underground::flowHasPathToSink(Lane lane, std::vector<const GridObject*> vi
 void Underground::advanceLanes() {
     if(down) {
         Underground* otherHalf = getOtherHalf();
-        if(laneHasItem(Lane::LEFT)) {
-            if(otherHalf->receiveItem(Lane::LEFT)) {
-                simulationRecord->exportsLeftLane++;
-                simulationRecord->itemsLeftLane--;
+        if(otherHalf != nullptr) {
+            if(laneHasItem(Lane::LEFT)) {
+                if(otherHalf->receiveItem(Lane::LEFT)) {
+                    simulationRecord->exportsLeftLane++;
+                    simulationRecord->itemsLeftLane--;
+                }
             }
-        }
 
-        if(laneHasItem(Lane::RIGHT)) {
-            if(otherHalf->receiveItem(Lane::RIGHT)) {
-                simulationRecord->exportsRightLane++;
-                simulationRecord->itemsRightLane--;
+            if(laneHasItem(Lane::RIGHT)) {
+                if(otherHalf->receiveItem(Lane::RIGHT)) {
+                    simulationRecord->exportsRightLane++;
+                    simulationRecord->itemsRightLane--;
+                }
             }
         }
     } else {
         int nextRow = getRow();
         int nextCol = getCol();
         getDirection().translate(nextRow, nextCol);
-        GridObject* nextObject = grid.gridObjectAt(nextRow, nextCol);
 
-        if(laneHasItem(Lane::LEFT)) {
-            if(nextObject->flowCanEnter(getDirection(), Lane::LEFT)) {
+        if(grid.isOnGrid(nextRow, nextCol)) {
+            if(grid.isGridObjectAt(nextRow, nextCol)) {
+                GridObject* nextObject = grid.gridObjectAt(nextRow, nextCol);
 
-                Lane laneNext = nextObject->flowEntersLane(getDirection(), Lane::LEFT);
-                if(nextObject->receiveItem(laneNext)) {
-                    simulationRecord->exportsLeftLane++;
-                    simulationRecord->itemsLeftLane--;
+                if(laneHasItem(Lane::LEFT)) {
+                    if(nextObject->flowCanEnter(getDirection(), Lane::LEFT)) {
+
+                        Lane laneNext = nextObject->flowEntersLane(getDirection(), Lane::LEFT);
+                        if(nextObject->receiveItem(laneNext)) {
+                            simulationRecord->exportsLeftLane++;
+                            simulationRecord->itemsLeftLane--;
+                        }
+                    }
                 }
-            }
-        }
 
-        if(laneHasItem(Lane::RIGHT)) {
-            if(nextObject->flowCanEnter(getDirection(), Lane::RIGHT)) {
+                if(laneHasItem(Lane::RIGHT)) {
+                    if(nextObject->flowCanEnter(getDirection(), Lane::RIGHT)) {
 
-                Lane laneNext = nextObject->flowEntersLane(getDirection(), Lane::RIGHT);
-                if(nextObject->receiveItem(laneNext)) {
-                    simulationRecord->exportsRightLane++;
-                    simulationRecord->itemsRightLane--;
+                        Lane laneNext = nextObject->flowEntersLane(getDirection(), Lane::RIGHT);
+                        if(nextObject->receiveItem(laneNext)) {
+                            simulationRecord->exportsRightLane++;
+                            simulationRecord->itemsRightLane--;
+                        }
+                    }
                 }
             }
         }
@@ -142,7 +153,7 @@ AsciiImage Underground::getImage() const {
         switch(getDirection()) {
         case Direction::NORTH:
             return {
-                "       ",
+                "        ",
                 "3------0",
                 "| ^  ^ |",
                 "|      |"
@@ -188,7 +199,7 @@ AsciiImage Underground::getImage() const {
             
         case Direction::SOUTH:
             return {
-                "       ",
+                "        ",
                 "3------0",
                 "| V  V |",
                 "|      |"
@@ -214,15 +225,17 @@ Underground* Underground::getOtherHalf() const {
     for(int i = 0; i < 9; i++) {
         otherHalfDir.translate(otherHalfRow, otherHalfCol);
 
-        if(grid.isGridObjectAt(otherHalfRow, otherHalfCol)) {
-            GridObject* go = grid.gridObjectAt(otherHalfRow, otherHalfCol);
-            Underground* casted = dynamic_cast<Underground*>(go);
-            if(casted != nullptr) {
-                if(casted->getDirection() == getDirection()) {
-                    if(casted->down == down) {
-                        return nullptr;
-                    } else {
-                        return casted;
+        if(grid.isOnGrid(otherHalfRow, otherHalfCol)) {
+            if(grid.isGridObjectAt(otherHalfRow, otherHalfCol)) {
+                GridObject* go = grid.gridObjectAt(otherHalfRow, otherHalfCol);
+                Underground* casted = dynamic_cast<Underground*>(go);
+                if(casted != nullptr) {
+                    if(casted->getDirection() == getDirection()) {
+                        if(casted->down == down) {
+                            return nullptr;
+                        } else {
+                            return casted;
+                        }
                     }
                 }
             }

@@ -7,25 +7,36 @@
 #include "../grid/gridObjects/Splitter.h"
 #include "../grid/gridObjects/Underground.h"
 
-#include "FlowSimulator.h"
+#include "LayoutTester.h"
 
 void LayoutSolver::findLayout(Grid& grid) {
     resetGrid(grid);
 
+    while(true) {
+        bool added = addRandomToGrid(grid);
 
+        if(added) {
+            std::string result = LayoutTester::testLayout(grid);
+            if(result.find("FAIL") == std::string::npos) {
+                break;
+            }
+        } else {
+            resetGrid(grid);
+        }
+    }
 }
 
 void LayoutSolver::resetGrid(Grid& grid) {
-    std::vector<const GridObject*> toRemove;
-    for(const GridObject* go : grid.allGridObjects()) {
-        const ItemSource* source = dynamic_cast<const ItemSource*>(go);
-        const ItemSink* sink = dynamic_cast<const ItemSink*>(go);
+    std::vector<GridObject*> toRemove;
+    for(GridObject* go : grid.allGridObjects()) {
+        ItemSource* source = dynamic_cast<ItemSource*>(go);
+        ItemSink* sink = dynamic_cast<ItemSink*>(go);
         if(source == nullptr && sink == nullptr) {
             toRemove.push_back(go);
         }
     }
 
-    for(const GridObject* go : toRemove) {
+    for(GridObject* go : toRemove) {
         grid.removeGridObject(go->getRow(), go->getCol());
     }
 }
@@ -35,8 +46,8 @@ bool LayoutSolver::addRandomToGrid(Grid& grid) {
     std::default_random_engine engine(device());
 
     for (int i = 0; i < 1000; i++) {
-        int row = std::uniform_int_distribution(0, grid.numRows)(engine);
-        int col = std::uniform_int_distribution(0, grid.numCols)(engine);
+        int row = std::uniform_int_distribution(0, grid.numRows - 1)(engine);
+        int col = std::uniform_int_distribution(0, grid.numCols - 1)(engine);
 
         if(grid.isGridObjectAt(row, col)) {
             continue;
@@ -54,6 +65,12 @@ bool LayoutSolver::addRandomToGrid(Grid& grid) {
             int otherRow = row;
             int otherCol = col;
             direction.clockwise().translate(otherRow, otherCol);
+            if(otherRow < 0 || otherRow >= grid.numRows) {
+                continue;
+            } else if(otherCol < 0 || otherCol >= grid.numCols) {
+                continue;
+            }
+
             if(grid.isGridObjectAt(otherRow, otherCol)) {
                 continue;
             }

@@ -22,10 +22,10 @@ GridObject::Lane Splitter::flowEntersLane(Direction incomingFlowDirection, Lane 
     return lane;
 }
 
-bool Splitter::flowHasPathToSink(Lane lane, std::vector<const GridObject*> visited) const {
-    visited.push_back(this);
+bool Splitter::flowHasPathToSink(Lane lane, std::vector<std::pair<const GridObject*, Lane>> visited) const {
+    visited.push_back({ this, lane });
 
-    if(std::find(visited.begin(), visited.end(), dynamic_cast<const GridObject*>(getOtherHalf())) == visited.end()) {
+    if(std::find(visited.begin(), visited.end(), std::pair<const GridObject*, Lane>(getOtherHalf(), lane)) == visited.end()) {
         bool otherSide = getOtherHalf()->flowHasPathToSink(lane, visited);
         if(otherSide) {
             return true;
@@ -36,20 +36,25 @@ bool Splitter::flowHasPathToSink(Lane lane, std::vector<const GridObject*> visit
     int outputCol = getCol();
     getDirection().translate(outputRow, outputCol);
 
+    if(!grid.isOnGrid(outputRow, outputCol)) {
+        return false;
+    }
+
     if(!grid.isGridObjectAt(outputRow, outputCol)) {
         return false;
     }
 
-    const GridObject* outputObject = grid.gridObjectAt(outputRow, outputCol);
+    GridObject* outputObject = grid.gridObjectAt(outputRow, outputCol);
     if(!outputObject->flowCanEnter(getDirection(), lane)) {
         return false;
     }
 
-    if(std::find(visited.begin(), visited.end(), outputObject) != visited.end()) {
+    Lane flowEntersLane = outputObject->flowEntersLane(getDirection(), lane);
+
+    if(std::find(visited.begin(), visited.end(), std::pair<const GridObject*, Lane>(outputObject, lane)) != visited.end()) {
         return false;
     }
 
-    Lane flowEntersLane = outputObject->flowEntersLane(getDirection(), lane);
     bool flowHasPathToSink = outputObject->flowHasPathToSink(flowEntersLane, visited);
     return flowHasPathToSink;
 }
@@ -59,8 +64,10 @@ void Splitter::advanceLanes() {
     int afterCol = getCol();
     getDirection().translate(afterRow, afterCol);
     GridObject* afterMe = nullptr;
-    if(grid.isGridObjectAt(afterRow, afterCol)) {
-        afterMe = grid.gridObjectAt(afterRow, afterCol);
+    if(grid.isOnGrid(afterRow, afterCol)) {
+        if(grid.isGridObjectAt(afterRow, afterCol)) {
+            afterMe = grid.gridObjectAt(afterRow, afterCol);
+        }
     }
 
     if(side == SplitterSide::LEFT) {
@@ -72,8 +79,10 @@ void Splitter::advanceLanes() {
     }
 
     GridObject* afterOther = nullptr;
-    if(grid.isGridObjectAt(afterRow, afterCol)) {
-        afterOther = grid.gridObjectAt(afterRow, afterCol);
+    if(grid.isOnGrid(afterRow, afterCol)) {
+        if(grid.isGridObjectAt(afterRow, afterCol)) {
+            afterOther = grid.gridObjectAt(afterRow, afterCol);
+        }
     }
 
     if(laneHasItem(Lane::LEFT)) {

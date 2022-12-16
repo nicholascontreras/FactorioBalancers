@@ -21,7 +21,7 @@ GridObject::Lane ItemSink::flowEntersLane(Direction incomingFlowDirection, Lane 
     return lane;
 }
 
-bool ItemSink::flowHasPathToSink(Lane lane, std::vector<const GridObject*> visited) const {
+bool ItemSink::flowHasPathToSink(Lane lane, std::vector<std::pair<const GridObject*, Lane>> visited) const {
     UNREFERENCED_PARAMETER(lane);
     UNREFERENCED_PARAMETER(visited);
     return true;

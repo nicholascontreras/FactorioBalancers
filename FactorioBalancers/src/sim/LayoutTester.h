@@ -14,6 +14,7 @@ public:
 private:
     static std::string testIsConnected(const Grid& grid);
     static std::string testIsBalancer(const Grid& grid);
+    static std::string testIsThroughputUnlimited(const Grid& grid);
 
     static std::vector<ItemSource*> allSources(const Grid& grid);
     static std::vector<ItemSink*> allSinks(const Grid& grid);

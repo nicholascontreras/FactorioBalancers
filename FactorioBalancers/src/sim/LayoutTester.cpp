@@ -1,5 +1,7 @@
 #include "LayoutTester.h"
 
+#include <algorithm>
+
 #include "FlowSimulator.h"
 
 std::string LayoutTester::testLayout(const Grid& grid) {
@@ -28,6 +30,19 @@ std::string LayoutTester::testLayout(const Grid& grid) {
         results += "SKIP\r\n";
     }
 
+    results += "Throughput: ";
+    if(!stopTests) {
+        std::string throughputResult = testIsThroughputUnlimited(grid);
+        if(throughputResult.empty()) {
+            results += "PASS\r\n";
+        } else {
+            results += "FAIL: " + throughputResult + "\r\n";
+            stopTests = true;
+        }
+    } else {
+        results += "SKIP\r\n";
+    }
+
     return results;
 }
 
@@ -35,11 +50,11 @@ std::string LayoutTester::testIsConnected(const Grid& grid) {
     std::vector<ItemSource*> itemSources = allSources(grid);
 
     for(ItemSource* curSource : itemSources) {
-        if(!curSource->flowHasPathToSink(GridObject::Lane::LEFT, std::vector<const GridObject*>())) {
+        if(!curSource->flowHasPathToSink(GridObject::Lane::LEFT)) {
             return "Source at (" + std::to_string(curSource->getRow()) + "," + std::to_string(curSource->getCol()) +
                 "), Left Lane has no path to Sink.";
         }
-        if(!curSource->flowHasPathToSink(GridObject::Lane::RIGHT, std::vector<const GridObject*>())) {
+        if(!curSource->flowHasPathToSink(GridObject::Lane::RIGHT)) {
             return "Source at (" + std::to_string(curSource->getRow()) + "," + std::to_string(curSource->getCol()) +
                 "), Right Lane has no path to Sink.";
         }
@@ -56,29 +71,52 @@ std::string LayoutTester::testIsBalancer(const Grid& grid) {
     for(std::vector<ItemSource*> curSourceSubset : sourceSubsets) {
         FlowSimulator::runSimulation(grid, 100, curSourceSubset, itemSinks);
 
-        int sumOfItemsLeftLane = 0;
-        int sumOfItemsRightLane = 0;
-        int numSinks = 0;
+        int avgItemsPerSink = 0;
+        for(ItemSink* curSink : itemSinks) {
+            const GridObject::SimulationRecord* record = curSink->getSimulationRecord();
+            avgItemsPerSink += record->exportsLeftLane;
+            avgItemsPerSink += record->exportsRightLane;
+        }
+        avgItemsPerSink /= (int)itemSinks.size();
 
         for(ItemSink* curSink : itemSinks) {
             const GridObject::SimulationRecord* record = curSink->getSimulationRecord();
-            if(numSinks > 0) {
-                int avgItemsLeftLane = sumOfItemsLeftLane / numSinks;
-                int avgItemsRightLane = sumOfItemsRightLane / numSinks;
+            int curNumItems = record->exportsLeftLane + record->exportsRightLane;
+            if(std::abs(avgItemsPerSink - curNumItems) > 1) {
+                return "Sink at (" + std::to_string(curSink->getRow()) + "," + std::to_string(curSink->getCol()) +
+                    "), expected " + std::to_string(avgItemsPerSink / 2) + "% flow, got " + std::to_string(curNumItems / 2) + "%.";
+            }
+        }
+    }
 
-                if(std::abs(record->exportsLeftLane - avgItemsLeftLane) > 1) {
+    return "";
+}
+
+std::string LayoutTester::testIsThroughputUnlimited(const Grid& grid) {
+    std::vector<ItemSource*> itemSources = allSources(grid);
+    std::vector<ItemSink*> itemSinks = allSinks(grid);
+
+    std::vector<std::vector<ItemSource*>> sourceSubsets = subsets(itemSources);
+    std::vector<std::vector<ItemSink*>> sinkSubsets = subsets(itemSinks);
+
+    for(std::vector<ItemSource*> curSourceSubset : sourceSubsets) {
+        for(std::vector<ItemSink*> curSinkSubset : sinkSubsets) {
+            int numSources = (int)curSourceSubset.size();
+            int numSinks = (int)curSinkSubset.size();
+
+            FlowSimulator::runSimulation(grid, 100, curSourceSubset, curSinkSubset);
+
+            int expectedItemsPerSink = std::min((100 * numSources) / numSinks, 100) * 2;
+
+            for(ItemSink* curSink : curSinkSubset) {
+                const GridObject::SimulationRecord* record = curSink->getSimulationRecord();
+                int curNumItems = record->exportsLeftLane + record->exportsRightLane;
+
+                if(std::abs(expectedItemsPerSink - curNumItems) > 1) {
                     return "Sink at (" + std::to_string(curSink->getRow()) + "," + std::to_string(curSink->getCol()) +
-                        "), Left Lane expected " + std::to_string(avgItemsLeftLane) + "% flow, got " + std::to_string(record->exportsLeftLane) + "%.";
-                }
-                if(std::abs(record->exportsRightLane - avgItemsRightLane) > 1) {
-                    return "Sink at (" + std::to_string(curSink->getRow()) + "," + std::to_string(curSink->getCol()) +
-                        "), Right Lane expected " + std::to_string(avgItemsRightLane) + "% flow, got " + std::to_string(record->exportsRightLane) + "%.";
+                        "), expected " + std::to_string(expectedItemsPerSink / 2) + "% flow, got " + std::to_string(curNumItems / 2) + "%.";
                 }
             }
-
-            sumOfItemsLeftLane += record->exportsLeftLane;
-            sumOfItemsRightLane += record->exportsRightLane;
-            numSinks++;
         }
     }
 

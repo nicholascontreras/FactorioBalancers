@@ -5,7 +5,7 @@
 
 class LayoutBrowser {
 public:
-    static void browseLayout(const Grid& grid);
+    static void browseLayout(Grid& grid);
 
 private:
     static int selectedRow, selectedCol;
@@ -13,6 +13,7 @@ private:
     static bool runTests;
     static bool runStep;
     static bool resetSim;
+    static bool runSolver;
     static std::string testResults;
 
     static void waitForKey();

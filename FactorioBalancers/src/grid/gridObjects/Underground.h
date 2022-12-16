@@ -7,7 +7,7 @@ public:
     Underground(const Grid& grid, int row, int col, Direction direction, bool down);
     virtual bool flowCanEnter(Direction incomingFlowDirection, Lane lane) const;
     virtual Lane flowEntersLane(Direction incomingFlowDirection, Lane lane) const;
-    virtual bool flowHasPathToSink(Lane lane, std::vector<const GridObject*> visited) const;
+    virtual bool flowHasPathToSink(Lane lane, std::vector<std::pair<const GridObject*, Lane>> visited = std::vector<std::pair<const GridObject*, Lane>>()) const;
 
     virtual void advanceLanes();
 

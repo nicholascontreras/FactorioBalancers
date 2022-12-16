@@ -28,12 +28,20 @@ GridObject::Lane Belt::flowEntersLane(Direction incomingFlowDirection, Lane lane
     }
 }
 
-bool Belt::flowHasPathToSink(Lane lane, std::vector<const GridObject*> visited) const {
-    visited.push_back(this);
+bool Belt::flowHasPathToSink(Lane lane, std::vector<std::pair<const GridObject*, Lane>> visited) const {
+    if(std::find(visited.begin(), visited.end(), std::pair<const GridObject*, Lane>(this, lane)) != visited.end()) {
+        return false;
+    }
+
+    visited.push_back({ this, lane });
 
     int outputRow = getRow();
     int outputCol = getCol();
     getDirection().translate(outputRow, outputCol);
+
+    if(!grid.isOnGrid(outputRow, outputCol)) {
+        return false;
+    }
 
     if(!grid.isGridObjectAt(outputRow, outputCol)) {
         return false;
@@ -53,6 +61,10 @@ void Belt::advanceLanes() {
     int nextRow = getRow();
     int nextCol = getCol();
     getDirection().translate(nextRow, nextCol);
+
+    if(!grid.isOnGrid(nextRow, nextCol)) {
+        return;
+    }
 
     if(!grid.isGridObjectAt(nextRow, nextCol)) {
         return;
@@ -84,8 +96,8 @@ void Belt::advanceLanes() {
 
 std::string Belt::selectedString() const {
     return "Belt - Output: " + getDirection().toString() + "\r\n" +
-        "Path (L): " + (flowHasPathToSink(Lane::LEFT, std::vector<const GridObject*>()) ? "T" : "F") +
-        " (R): " + (flowHasPathToSink(Lane::RIGHT, std::vector<const GridObject*>()) ? "T" : "F") + "\r\n" + 
+        "Path (L): " + (flowHasPathToSink(Lane::LEFT) ? "T" : "F") +
+        " (R): " + (flowHasPathToSink(Lane::RIGHT) ? "T" : "F") + "\r\n" + 
         "Items (L): " + std::to_string(simulationRecord->itemsLeftLane) + 
              " (R): " + std::to_string(simulationRecord->itemsRightLane);
 }
@@ -200,15 +212,17 @@ Direction Belt::determineInputDirection() const {
     int behindCol = getCol();
     getDirection().reverse().translate(behindRow, behindCol);
 
-    if(grid.isGridObjectAt(behindRow, behindCol)) {
-        GridObject* behind = grid.gridObjectAt(behindRow, behindCol);
-        if(behind->getDirection() == getDirection()) {
-            if(Underground* asUnderground = dynamic_cast<Underground*>(behind)) {
-                if(!asUnderground->isDown()) {
+    if(grid.isOnGrid(behindRow, behindCol)) {
+        if(grid.isGridObjectAt(behindRow, behindCol)) {
+            GridObject* behind = grid.gridObjectAt(behindRow, behindCol);
+            if(behind->getDirection() == getDirection()) {
+                if(Underground* asUnderground = dynamic_cast<Underground*>(behind)) {
+                    if(!asUnderground->isDown()) {
+                        return getDirection();
+                    }
+                } else {
                     return getDirection();
                 }
-            } else {
-                return getDirection();
             }
         }
     }
@@ -218,9 +232,11 @@ Direction Belt::determineInputDirection() const {
     getDirection().clockwise().translate(cwRow, cwCol);
     bool cwIn = false;
 
-    if(grid.isGridObjectAt(cwRow, cwCol)) {
-        if(grid.gridObjectAt(cwRow, cwCol)->getDirection() == getDirection().counterClockwise()) {
-            cwIn = true;
+    if(grid.isOnGrid(cwRow, cwCol)) {
+        if(grid.isGridObjectAt(cwRow, cwCol)) {
+            if(grid.gridObjectAt(cwRow, cwCol)->getDirection() == getDirection().counterClockwise()) {
+                cwIn = true;
+            }
         }
     }
 
@@ -229,9 +245,11 @@ Direction Belt::determineInputDirection() const {
     getDirection().counterClockwise().translate(ccwRow, ccwCol);
     bool ccwIn = false;
 
-    if(grid.isGridObjectAt(ccwRow, ccwCol)) {
-        if(grid.gridObjectAt(ccwRow, ccwCol)->getDirection() == getDirection().clockwise()) {
-            ccwIn = true;
+    if(grid.isOnGrid(ccwRow, ccwCol)) {
+        if(grid.isGridObjectAt(ccwRow, ccwCol)) {
+            if(grid.gridObjectAt(ccwRow, ccwCol)->getDirection() == getDirection().clockwise()) {
+                ccwIn = true;
+            }
         }
     }
 

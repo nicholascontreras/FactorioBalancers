@@ -6,6 +6,7 @@
 
 #include "sim/LayoutTester.h"
 #include "sim/FlowSimulator.h"
+#include "sim/LayoutSolver.h"
 #include "grid/gridObjects/GridObject.h"
 
 int LayoutBrowser::selectedRow = 0, LayoutBrowser::selectedCol = 0;
@@ -13,9 +14,10 @@ bool LayoutBrowser::close = false;
 bool LayoutBrowser::runTests = false;
 bool LayoutBrowser::runStep = false;
 bool LayoutBrowser::resetSim = false;
+bool LayoutBrowser::runSolver = false;
 std::string LayoutBrowser::testResults = "";
 
-void LayoutBrowser::browseLayout(const Grid& grid) {
+void LayoutBrowser::browseLayout(Grid& grid) {
 
     std::string clear;
     for(int i = 0; i < 100; i++) {
@@ -34,6 +36,10 @@ void LayoutBrowser::browseLayout(const Grid& grid) {
         } else if(resetSim) {
             resetSim = false;
             FlowSimulator::resetSimulation(grid);
+        } else if(runSolver) {
+            runSolver = false;
+            LayoutSolver::findLayout(grid);
+            testResults = LayoutTester::testLayout(grid);
         }
 
         std::cout << clear << std::endl;
@@ -87,5 +93,7 @@ void LayoutBrowser::waitForKey() {
         runStep = true;
     } else if(c == 'r') {
         resetSim = true;
+    } else if(c == 'f') {
+        runSolver = true;
     }
 }

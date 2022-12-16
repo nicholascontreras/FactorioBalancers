@@ -36,7 +36,7 @@ public:
 
     virtual bool flowCanEnter(Direction incomingFlowDirection, Lane lane) const = 0;
     virtual Lane flowEntersLane(Direction incomingFlowDirection, Lane lane) const = 0;;
-    virtual bool flowHasPathToSink(Lane lane, std::vector<const GridObject*> visited) const = 0;
+    virtual bool flowHasPathToSink(Lane lane, std::vector<std::pair<const GridObject*, Lane>> visited = std::vector<std::pair<const GridObject*, Lane>>()) const = 0;
 
     void acceptIncomingItems();
     bool receiveItem(Lane lane);

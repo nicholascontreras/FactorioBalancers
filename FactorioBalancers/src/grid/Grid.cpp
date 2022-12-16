@@ -13,7 +13,15 @@ Grid::~Grid() {
     std::for_each(gridObjects.begin(), gridObjects.end(), [](GridObject* cur) { delete cur; });
 }
 
+bool Grid::isOnGrid(int row, int col) const {
+    return row >= 0 && row < numRows&& col >= 0 && col < numCols;
+}
+
 bool Grid::isGridObjectAt(int row, int col) const {
+    if(!isOnGrid(row, col)) {
+        throw std::invalid_argument("Coords not on Grid!");
+    }
+
     return std::any_of(gridObjects.begin(), gridObjects.end(), [row, col](GridObject* cur) {
         return cur->getRow() == row && cur->getCol() == col;
     });
@@ -38,7 +46,9 @@ void Grid::removeGridObject(int row, int col) {
         throw std::invalid_argument("No GridObject at given position!");
     }
 
+    const GridObject* toDelete = gridObjectAt(row, col);
     gridObjects.erase(std::remove(gridObjects.begin(), gridObjects.end(), gridObjectAt(row, col)), gridObjects.end());
+    delete toDelete;
 }
 
 const std::vector<GridObject*> Grid::allGridObjects() const {
